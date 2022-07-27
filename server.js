@@ -44,7 +44,7 @@ app.get('/myform', async (req, res) => {
     // var myText = req.query.mytext
     // let listingFile = require("./listing.js");
     // let listing = listingFile.myFunction(myText);
-    console.log(await john.getListing(req.query.mytext));
+    let response = await john.getListing(req.query.mytext);
     // console.log(listing);
 });
 
@@ -121,8 +121,7 @@ app.get("/welcome", async (req, res) => {
 });
 
 // Start the server on port 3003
-const hostname = "0.0.0.0";
-const port = 3003;
-app.listen(port, hostname, () => {
+const port = 5000;
+app.listen(port, () => {
     console.log(`Example app listening at http://localhost:${port}`);
 });

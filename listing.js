@@ -35,7 +35,7 @@ method.getListing = async function (searchKeyWord) {
   var calls = [];
   
   var items = [];
-
+  var trends = [];
   if (response.status == 200) {
     console.log(results.results.length)
     var Imagelisting = require("./listing_image.js");
@@ -124,8 +124,19 @@ method.getListing = async function (searchKeyWord) {
     }
     var historical_metrices;
     let history_call = history.getHistoricalMetrices(searchKeyWord).then(response => {
+      
+      for (let i = 0; i < response.data[0].trend.length; i++) {
+        let trend = {
+          
+          month : response.data[0].trend[i].month,
+          year: response.data[0].trend[i].year,
+          value: response.data[0].trend[i].value,
+        }
+        trends.push(trend)
+      }
       historical_metrices = {
-        trends : response.data[0].trend
+        trends: trends,
+        competition: response.data[0].competition,
       }
     
     });
@@ -142,7 +153,7 @@ method.getListing = async function (searchKeyWord) {
       item_pricing: item_pricing,
       historical_metrices : historical_metrices
     };
-    console.log(result);
+    //console.log(result.historical_metrices.trends[0].month);
     return result;
   } else if (response.status == 401) {
 
