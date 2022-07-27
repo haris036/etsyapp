@@ -34,17 +34,17 @@ app.get('/ping', async (req, res) => {
 
 // This renders our `index.hbs` file.
 app.get('/', async (req, res) => {
-  res.send("<h1>Hello World!</h1>")
+    res.send("<h1>Server is running</h1>")
 
 });
 
-app.get('/myform', async (req, res) => {
+app.get('/getListing/:keyword', async (req, res) => {
     var Listing = require("./listing.js");
+
     var john = new Listing();
-    // var myText = req.query.mytext
-    // let listingFile = require("./listing.js");
-    // let listing = listingFile.myFunction(myText);
-    let response = await john.getListing(req.query.mytext);
+    
+    let response = await john.getListing(req.params.keyword);
+    res.end(JSON.stringify(response));
     // console.log(listing);
 });
 
@@ -121,6 +121,7 @@ app.get("/welcome", async (req, res) => {
 });
 
 // Start the server on port 3003
+
 app.listen(process.env.PORT || 3003, 
 	() => console.log("Server is running...")
-    );
+);
