@@ -34,7 +34,7 @@ app.get('/ping', async (req, res) => {
 
 // This renders our `index.hbs` file.
 app.get('/', async (req, res) => {
-    res.render("index");
+  res.send("<h1>Hello World!</h1>")
 
 });
 
