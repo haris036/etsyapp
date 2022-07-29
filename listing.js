@@ -47,6 +47,7 @@ method.getListing = async function (searchKeyWord) {
     for (let i = 0; i < length; i++) {
       calls.push(john.getListingImages(results.results[i].listing_id).then(response => {
         var images = [];
+        console.log(response);
         for (let i = 0; i < response.results.length; i++) {
           let image = {
             listing_id: response.results[i].listing_id,
@@ -179,7 +180,7 @@ method.getListing = async function (searchKeyWord) {
     for (let i = 0; i < results.results.length; i++) {
       calls.push(john.getListingImages(results.results[i].listing_id).then(response => {
         var images = [];
-
+        console.log(response);
         for (let i = 0; i < response.results.length; i++) {
           let image = {
             listing_id: response.results[i].listing_id,
