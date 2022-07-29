@@ -8,7 +8,6 @@ var headers = new fetch.Headers();
 headers.append("Content-Type", "application/x-www-form-urlencoded");
 headers.append("x-api-key", api_key_info.api_key);
 headers.append("Authorization", `Bearer ${tokenInfo.access_token}`);
-fs.close();
 var method = Listing.prototype;
 
 var requestOptions = {
@@ -172,7 +171,6 @@ console.log(response);
     console.log("token refreshed");
     let tokenInfo = JSON.parse(fs.readFileSync("token.json"));
     headers.append("Authorization", `Bearer ${tokenInfo.access_token}`);
-    fs.close();
     let response = await fetch("https://openapi.etsy.com/v3/application/listings/active?", requestOptions);
     let results = await response.json();
     console.log(results);
