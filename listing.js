@@ -117,7 +117,7 @@ method.getListing = async function (searchKeyWord) {
 
         );
       }));
-      if (i % 3 == 0) {
+      if (i % 1 == 0) {
         await Promise.all(calls);
         calls.splice(0, calls.length);
       }
@@ -250,7 +250,7 @@ method.getListing = async function (searchKeyWord) {
 
         );
       }));
-      if (i % 3 == 0) {
+      if (i % 1 == 0) {
         await Promise.all(calls);
         calls.splice(0, calls.length);
       }
