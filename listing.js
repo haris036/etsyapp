@@ -45,7 +45,7 @@ method.getListing = async function (searchKeyWord) {
     var history = new History();
     let popular_tags = new Map();
     let item_pricing = new Map();
-    for (let i = 0; i < results.results.length; i++) {
+    for (let i = 0; i < length; i++) {
       calls.push(john.getListingImages(results.results[i].listing_id).then(response => {
         var images = [];
 
