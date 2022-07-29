@@ -39,7 +39,6 @@ method.getListing = async function (searchKeyWord) {
   var trends = [];
   if (response.status == 200) {
     var length = results.results.length;
-    console.log(length)
     var Imagelisting = require("./listing_image.js");
     var john = new Imagelisting();
     var history = new History();
@@ -48,7 +47,6 @@ method.getListing = async function (searchKeyWord) {
     for (let i = 0; i < length; i++) {
       calls.push(john.getListingImages(results.results[i].listing_id).then(response => {
         var images = [];
-        console.log(response)
         for (let i = 0; i < response.results.length; i++) {
           let image = {
             listing_id: response.results[i].listing_id,
@@ -119,7 +117,7 @@ method.getListing = async function (searchKeyWord) {
 
         );
       }));
-      if (i % 5 == 0) {
+      if (i % 3 == 0) {
         await Promise.all(calls);
         calls.splice(0, calls.length);
       }
@@ -252,7 +250,7 @@ method.getListing = async function (searchKeyWord) {
 
         );
       }));
-      if (i % 5 == 0) {
+      if (i % 3 == 0) {
         await Promise.all(calls);
         calls.splice(0, calls.length);
       }
