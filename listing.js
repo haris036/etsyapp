@@ -29,9 +29,9 @@ method.getListing = async function (searchKeyWord) {
       limit: 100,
     }).toString()
   );
-  const response = await fetch(url, requestOptions);
+  let response = await fetch(url, requestOptions);
 
-  const results = await response.json();
+  let results = await response.json();
   var calls = [];
 
   var items = [];
@@ -155,7 +155,7 @@ method.getListing = async function (searchKeyWord) {
     };
     //console.log(result.historical_metrices.trends[0].month);
     return result;
-  } else if (response.status == 200){
+  } else if (response.status == 401){
 
     var invoked = false;
     console.log("refreshing token...");
@@ -168,8 +168,9 @@ method.getListing = async function (searchKeyWord) {
 
     await john.refreshToken();
     console.log("token refreshed");
-    const response = await fetch("https://openapi.etsy.com/v3/application/listings/active?", requestOptions);
-    const results = await response.json();
+    let response = await fetch("https://openapi.etsy.com/v3/application/listings/active?", requestOptions);
+    let results = await response.json();
+    console.log(results);
     var Imagelisting = require("./listing_image.js");
     var john = new Imagelisting();
     var history = new History();
