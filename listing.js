@@ -4,10 +4,12 @@ const History = require("./history.js");
 
 let tokenInfo = JSON.parse(fs.readFileSync("token.json"));
 let api_key_info = JSON.parse(fs.readFileSync("api_key.json"));
+
 var headers = new fetch.Headers();
 headers.append("Content-Type", "application/x-www-form-urlencoded");
 headers.append("x-api-key", api_key_info.api_key);
 headers.append("Authorization", `Bearer ${tokenInfo.access_token}`);
+
 var method = Listing.prototype;
 
 var requestOptions = {
@@ -29,16 +31,15 @@ method.getListing = async function (searchKeyWord) {
     }).toString()
   );
   let response = await fetch(url, requestOptions);
-
   let results = await response.json();
+
   var calls = [];
 
   var items = [];
   var trends = [];
   if (response.status == 200) {
-        var length = results.results.length;
+    var length = results.results.length;
     console.log(length)
-    
     var Imagelisting = require("./listing_image.js");
     var john = new Imagelisting();
     var history = new History();
@@ -47,7 +48,7 @@ method.getListing = async function (searchKeyWord) {
     for (let i = 0; i < length; i++) {
       calls.push(john.getListingImages(results.results[i].listing_id).then(response => {
         var images = [];
-console.log(response);
+        
         for (let i = 0; i < response.results.length; i++) {
           let image = {
             listing_id: response.results[i].listing_id,
@@ -158,22 +159,22 @@ console.log(response);
     return result;
   } else if (response.status == 401){
 
-    var invoked = false;
+
     console.log("refreshing token...");
     var history = new History();
     let popular_tags = new Map();
     let item_pricing = new Map();
     var Refreshtoken = require("./refresh_token.js");
     var john = new Refreshtoken();
-
-
-    await john.refreshToken();
-    console.log("token refreshed");
     let tokenInfo = JSON.parse(fs.readFileSync("token.json"));
     headers.append("Authorization", `Bearer ${tokenInfo.access_token}`);
+    requestOptions.headers.delete("Authorization");
+    await john.refreshToken();
+    console.log("token refreshed");
     let response = await fetch("https://openapi.etsy.com/v3/application/listings/active?", requestOptions);
+
     let results = await response.json();
-    console.log(results);
+ 
     var Imagelisting = require("./listing_image.js");
     var john = new Imagelisting();
     var history = new History();
