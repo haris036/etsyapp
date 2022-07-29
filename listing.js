@@ -45,8 +45,12 @@ method.getListing = async function (searchKeyWord) {
     let popular_tags = new Map();
     let item_pricing = new Map();
     for (let i = 0; i < length; i++) {
+      try {
       calls.push(john.getListingImages(results.results[i].listing_id).then(response => {
+
+        try {
         var images = [];
+        
         for (let i = 0; i < response.results.length; i++) {
           let image = {
             listing_id: response.results[i].listing_id,
@@ -116,11 +120,15 @@ method.getListing = async function (searchKeyWord) {
           item,
 
         );
-      }));
+     } catch (e){
+      console.log(e);
+     } }));
       if (i % 1 == 0) {
         await Promise.all(calls);
         calls.splice(0, calls.length);
-        await sleep(1000);
+      }
+      }catch (e){
+        console.log(e);
       }
     }
     var historical_metrices;
@@ -180,6 +188,7 @@ method.getListing = async function (searchKeyWord) {
     for (let i = 0; i < results.results.length; i++) {
       calls.push(john.getListingImages(results.results[i].listing_id).then(response => {
         var images = [];
+
         for (let i = 0; i < response.results.length; i++) {
           let image = {
             listing_id: response.results[i].listing_id,
@@ -253,7 +262,6 @@ method.getListing = async function (searchKeyWord) {
       if (i % 1 == 0) {
         await Promise.all(calls);
         calls.splice(0, calls.length);
-        await sleep(1000);
       }
     }
     var historical_metrices;
