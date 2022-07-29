@@ -23,7 +23,7 @@ method.refreshToken = async function () {
     const results = await response.json();
     console.log(results);
     fs.writeFileSync("token.json", JSON.stringify(results));
-
+    fs.close();
 }
 
 module.exports = Refreshtoken;
