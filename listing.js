@@ -37,8 +37,9 @@ method.getListing = async function (searchKeyWord) {
   var items = [];
   var trends = [];
   if (response.status == 200) {
-    console.log(results.results.length)
-    console.log(results);
+        var length = results.results.length;
+    console.log(length)
+    
     var Imagelisting = require("./listing_image.js");
     var john = new Imagelisting();
     var history = new History();
