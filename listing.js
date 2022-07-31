@@ -22,7 +22,7 @@ var requestOptions = {
 function Listing() { }
 
 method.getListing = async function (searchKeyWord) {
-
+try {
   const url = (
     'https://openapi.etsy.com/v3/application/listings/active?' +
     new URLSearchParams({
@@ -301,7 +301,9 @@ method.getListing = async function (searchKeyWord) {
   } else {
     return `Error in getting results received respose code: ${response.status} response description: ${response.statusText}`;
   }
-
+} catch (e) {
+  console.log(e)
+}
 };
 
 function sleep(ms) {
