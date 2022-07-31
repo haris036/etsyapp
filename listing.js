@@ -126,6 +126,7 @@ method.getListing = async function (searchKeyWord) {
       if (i % 1 == 0) {
         await Promise.all(calls);
         calls.splice(0, calls.length);
+        await sleep(1000);
       }
       }catch (e){
         console.log(e);
@@ -262,6 +263,7 @@ method.getListing = async function (searchKeyWord) {
       if (i % 1 == 0) {
         await Promise.all(calls);
         calls.splice(0, calls.length);
+        await sleep(1000);
       }
     }
     var historical_metrices;
