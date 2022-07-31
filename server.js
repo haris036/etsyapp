@@ -1,126 +1,312 @@
-// Import the express and fetch libraries
-const express = require('express');
 const fetch = require("node-fetch");
-const hbs = require("hbs");
+const fs = require('fs');
+const History = require("./history.js");
 
-// Create a new express application
-const app = express();
+let tokenInfo = JSON.parse(fs.readFileSync("token.json"));
+let api_key_info = JSON.parse(fs.readFileSync("api_key.json"));
+
+var headers = new fetch.Headers();
+headers.append("Content-Type", "application/x-www-form-urlencoded");
+headers.append("x-api-key", api_key_info.api_key);
+headers.append("Authorization", `Bearer ${tokenInfo.access_token}`);
+
+var method = Listing.prototype;
+
+var requestOptions = {
+  method: 'GET',
+  headers: headers,
+  redirect: 'follow',
+};
 
 
-app.set("view engine", "hbs");
-app.set("views", `${process.cwd()}/views`);
+function Listing() { }
 
-// Send a JSON response to a default get request
-app.get('/ping', async (req, res) => {
-    const requestOptions = {
-        'method': 'GET',
-        'headers': {
-            'x-api-key': '7vudmbql4ympd8mrzsajli9n',
-        },
-    };
+method.getListing = async function (searchKeyWord) {
 
-    const response = await fetch(
-        'https://api.etsy.com/v3/application/openapi-ping',
-        requestOptions
-    );
+  const url = (
+    'https://openapi.etsy.com/v3/application/listings/active?' +
+    new URLSearchParams({
+      keywords: searchKeyWord,
+      limit: 100,
+    }).toString()
+  );
+  let response = await fetch(url, requestOptions);
+  let results = await response.json();
 
-    if (response.ok) {
-        const data = await response.json();
-        res.send(data);
-    } else {
-        res.send("oops");
-    }
-});
+  var calls = [];
 
-// This renders our `index.hbs` file.
-app.get('/', async (req, res) => {
-    res.send("<h1>Server is running</h1>")
+  var items = [];
+  var trends = [];
+  if (response.status == 200) {
+    var length = results.results.length;
+    var Imagelisting = require("./listing_image.js");
+    var john = new Imagelisting();
+    var history = new History();
+    let popular_tags = new Map();
+    let item_pricing = new Map();
+    for (let i = 0; i < length; i++) {
+      try {
+      calls.push(john.getListingImages(results.results[i].listing_id).then(response => {
 
-});
-
-app.get('/getListing/:keyword', async (req, res) => {
-    var Listing = require("./listing.js");
-
-    var john = new Listing();
-    
-    let response = await john.getListing(req.params.keyword);
-    res.end(JSON.stringify(response));
-    // console.log(listing);
-});
-
-/**
-These variables contain your API Key, the state sent
-in the initial authorization request, and the client verifier compliment
-to the code_challenge sent with the initial authorization request
-*/
-const clientID = '7vudmbql4ympd8mrzsajli9n';
-const clientVerifier = 'k59fybFJkKeIfKVfhXZqLfPlye0Q-MpMMcT72NgaRBw';
-const redirectUri = 'https://oauth.pstmn.io/v1/callback';
-
-app.get("https://oauth.pstmn.io/v1/callback", async (req, res) => {
-    // The req.query object has the query params that Etsy authentication sends
-    // to this route. The authorization code is in the `code` param
-    const authCode = req.query.code;
-    const tokenUrl = 'https://api.etsy.com/v3/public/oauth/token';
-    const requestOptions = {
-        method: 'POST',
-        body: JSON.stringify({
-            grant_type: 'authorization_code',
-            client_id: clientID,
-            redirect_uri: redirectUri,
-            code: authCode,
-            code_verifier: clientVerifier,
-        }),
-        headers: {
-            'Content-Type': 'application/json'
+        try {
+        var images = [];
+        
+        for (let i = 0; i < response.results.length; i++) {
+          let image = {
+            listing_id: response.results[i].listing_id,
+            listing_image_id: response.results[i].listing_image_id,
+            created_timestamp: response.results[i].created_timestamp,
+            url_75x75: response.results[i].url_75x75,
+            url_170x135: response.results[i].url_170x135,
+            url_570xN: response.results[i].url_570xN,
+            url_fullxfull: response.results[i].url_fullxfull,
+          };
+          images.push(
+            image
+          );
         }
-    };
+        let item = {
+          listing_id: results.results[i].listing_id,
+          user_id: results.results[i].user_id,
+          shop_id: results.results[i].shop_id,
+          title: results.results[i].title,
+          description: results.results[i].description,
+          state: results.results[i].state,
+          quantity: results.results[i].quantity,
+          featured_rank: results.results[i].featured_rank,
+          url: results.results[i].url,
+          num_favorers: results.results[i].num_favorers,
+          tags: results.results[i].tags,
+          materials: results.results[i].materials,
+          who_made: results.results[i].who_made,
+          when_made: results.results[i].when_made,
+          price: results.results[i].price,
+          processing_min: results.results[i].processing_min,
+          processing_max: results.results[i].processing_max,
+          images: images,
 
-    // Extract the access token from the response access_token data field
-    if (response.ok) {
-        const tokenData = await response.json();
-        console.log(tokenData.access_token);
-        res.redirect(`/welcome?access_token=${tokenData.access_token}`);
-    } else {
-        res.send("oops");
-    }
-});
+        };
 
-app.get("/welcome", async (req, res) => {
-    // We passed the access token in via the querystring
-    const {
-        access_token
-    } = req.query;
+        for (let j = 0; j < item.tags.length; j++) {
 
-    // An Etsy access token includes your shop/user ID
-    // as a token prefix, so we can extract that too
-    const user_id = access_token.split('.')[0];
+          if (!popular_tags.has(item.tags[j].toLowerCase())) {
+            let tag_properties = {
+              count: 0,
+              processing_min: 0,
+              processing_max: 0,
+              photos: 0,
+              price: 0,
+              divisor: 0,
 
-    const requestOptions = {
-        headers: {
-            'x-api-key': clientID,
-            // Scoped endpoints require a bearer token
-            Authorization: `Bearer ${access_token}`,
+            }
+            popular_tags.set(item.tags[j].toLowerCase(), tag_properties);
+          }
+          let tag_properties = popular_tags.get(item.tags[j].toLowerCase());
+          tag_properties.count++;
+          tag_properties.processing_min += item.processing_min;
+          tag_properties.processing_max += item.processing_max;
+          tag_properties.price += item.price.amount;
+          tag_properties.photos += images.length;
+          tag_properties.divisor += item.price.divisor,
+            popular_tags.set(item.tags[j].toLowerCase(), tag_properties);
         }
-    };
+        if (!item_pricing.has(item.price.amount)) {
+          item_pricing.set(item.price.amount, 0);
+        }
+        let count = item_pricing.get(item.price.amount);
+        item_pricing.set(item.price.amount, ++count);
 
-    const response = await fetch(
-        `https://api.etsy.com/v3/application/users/${user_id}`,
-        requestOptions
-    );
+        items.push(
+          item,
 
-    if (response.ok) {
-        const userData = await response.json();
-        // Load the template with the first name as a template variable.
-        res.render("welcome", {
-            first_name: userData.first_name
-        });
-    } else {
-        res.send("oops");
+        );
+     } catch (e){
+      console.log(e);
+     } }));
+      if (i % 1 == 0) {
+        await Promise.all(calls);
+        calls.splice(0, calls.length);
+
+      }
+      }catch (e){
+        console.log(e);
+      }
     }
-});
+    var historical_metrices;
+    let history_call = history.getHistoricalMetrices(searchKeyWord).then(response => {
 
-// Start the server on port 3003
-app.listen(process.env.PORT || 3003, 
-	() => console.log("Server is running...")
-    );
+      for (let i = 0; i < response.data[0].trend.length; i++) {
+        let trend = {
+
+          month: response.data[0].trend[i].month,
+          year: response.data[0].trend[i].year,
+          value: response.data[0].trend[i].value,
+        }
+        trends.push(trend)
+      }
+      historical_metrices = {
+        trends: trends,
+        competition: response.data[0].competition,
+      }
+
+    });
+    if (calls.length != 0) {
+      await Promise.all(calls);
+      calls.splice(0, calls.length);
+    }
+
+    await Promise.resolve(history_call);
+
+    let result = {
+      items: items,
+      popular_tags: popular_tags,
+      item_pricing: item_pricing,
+      historical_metrices: historical_metrices
+    };
+    //console.log(result.historical_metrices.trends[0].month);
+    return result;
+  } else if (response.status == 401){
+
+
+    console.log("refreshing token...");
+    var history = new History();
+    let popular_tags = new Map();
+    let item_pricing = new Map();
+    var Refreshtoken = require("./refresh_token.js");
+    var john = new Refreshtoken();
+    let tokenInfo = JSON.parse(fs.readFileSync("token.json"));
+    headers.append("Authorization", `Bearer ${tokenInfo.access_token}`);
+    requestOptions.headers.delete("Authorization");
+    await john.refreshToken();
+    console.log("token refreshed");
+    let response = await fetch("https://openapi.etsy.com/v3/application/listings/active?", requestOptions);
+
+    let results = await response.json();
+ 
+    var Imagelisting = require("./listing_image.js");
+    var john = new Imagelisting();
+    var history = new History();
+    for (let i = 0; i < results.results.length; i++) {
+      calls.push(john.getListingImages(results.results[i].listing_id).then(response => {
+        var images = [];
+
+        for (let i = 0; i < response.results.length; i++) {
+          let image = {
+            listing_id: response.results[i].listing_id,
+            listing_image_id: response.results[i].listing_image_id,
+            created_timestamp: response.results[i].created_timestamp,
+            url_75x75: response.results[i].url_75x75,
+            url_170x135: response.results[i].url_170x135,
+            url_570xN: response.results[i].url_570xN,
+            url_fullxfull: response.results[i].url_fullxfull,
+          };
+          images.push(
+            image
+          );
+        }
+        let item = {
+          listing_id: results.results[i].listing_id,
+          user_id: results.results[i].user_id,
+          shop_id: results.results[i].shop_id,
+          title: results.results[i].title,
+          description: results.results[i].description,
+          state: results.results[i].state,
+          quantity: results.results[i].quantity,
+          featured_rank: results.results[i].featured_rank,
+          url: results.results[i].url,
+          num_favorers: results.results[i].num_favorers,
+          tags: results.results[i].tags,
+          materials: results.results[i].materials,
+          who_made: results.results[i].who_made,
+          when_made: results.results[i].when_made,
+          price: results.results[i].price,
+          processing_min: results.results[i].processing_min,
+          processing_max: results.results[i].processing_max,
+          images: images,
+
+        };
+
+        for (let j = 0; j < item.tags.length; j++) {
+
+          if (!popular_tags.has(item.tags[j].toLowerCase())) {
+            let tag_properties = {
+              count: 0,
+              processing_min: 0,
+              processing_max: 0,
+              photos: 0,
+              price: 0,
+              divisor: 0,
+
+            }
+            popular_tags.set(item.tags[j].toLowerCase(), tag_properties);
+          }
+          let tag_properties = popular_tags.get(item.tags[j].toLowerCase());
+          tag_properties.count++;
+          tag_properties.processing_min += item.processing_min;
+          tag_properties.processing_max += item.processing_max;
+          tag_properties.price += item.price.amount;
+          tag_properties.photos += images.length;
+          tag_properties.divisor += item.price.divisor,
+            popular_tags.set(item.tags[j].toLowerCase(), tag_properties);
+        }
+        if (!item_pricing.has(item.price.amount)) {
+          item_pricing.set(item.price.amount, 0);
+        }
+        let count = item_pricing.get(item.price.amount);
+        item_pricing.set(item.price.amount, ++count);
+
+        items.push(
+          item,
+
+        );
+      }));
+      if (i % 1 == 0) {
+        await Promise.all(calls);
+        calls.splice(0, calls.length);
+        
+      }
+    }
+    var historical_metrices;
+    let history_call = history.getHistoricalMetrices(searchKeyWord).then(response => {
+
+      for (let i = 0; i < response.data[0].trend.length; i++) {
+        let trend = {
+
+          month: response.data[0].trend[i].month,
+          year: response.data[0].trend[i].year,
+          value: response.data[0].trend[i].value,
+        }
+        trends.push(trend)
+      }
+      historical_metrices = {
+        trends: trends,
+        competition: response.data[0].competition,
+      }
+
+    });
+    if (calls.length != 0) {
+      await Promise.all(calls);
+      calls.splice(0, calls.length);
+    }
+
+    await Promise.resolve(history_call);
+
+    let result = {
+      items: items,
+      popular_tags: popular_tags,
+      item_pricing: item_pricing,
+      historical_metrices: historical_metrices
+    };
+    return result;
+  } else {
+    return `Error in getting results received respose code: ${response.status} response description: ${response.statusText}`;
+  }
+
+};
+
+function sleep(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+module.exports = Listing;
