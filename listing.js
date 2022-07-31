@@ -22,7 +22,7 @@ var requestOptions = {
 function Listing() { }
 
 method.getListing = async function (searchKeyWord) {
-try {
+
   const url = (
     'https://openapi.etsy.com/v3/application/listings/active?' +
     new URLSearchParams({
@@ -126,7 +126,7 @@ try {
       if (i % 1 == 0) {
         await Promise.all(calls);
         calls.splice(0, calls.length);
-        await sleep(1000);
+
       }
       }catch (e){
         console.log(e);
@@ -263,7 +263,7 @@ try {
       if (i % 1 == 0) {
         await Promise.all(calls);
         calls.splice(0, calls.length);
-        await sleep(1000);
+        
       }
     }
     var historical_metrices;
@@ -301,9 +301,7 @@ try {
   } else {
     return `Error in getting results received respose code: ${response.status} response description: ${response.statusText}`;
   }
-} catch (e) {
-  console.log(e)
-}
+
 };
 
 function sleep(ms) {
