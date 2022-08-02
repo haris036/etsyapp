@@ -50,8 +50,8 @@ method.getListing = async function (searchKeyWord) {
 
         try {
         var images = [];
-        
-        for (let i = 0; i < response.results.length; i++) {
+        let total_images = response.results.length;
+        for (let i = 0; i < total_images; i++) {
           let image = {
             listing_id: response.results[i].listing_id,
             listing_image_id: response.results[i].listing_image_id,
@@ -88,8 +88,9 @@ method.getListing = async function (searchKeyWord) {
         };
 
         for (let j = 0; j < item.tags.length; j++) {
-
+          
           if (!popular_tags.has(item.tags[j].toLowerCase())) {
+            //console.log("Hello");
             let tag_properties = {
               count: 0,
               processing_min: 0,
@@ -156,11 +157,11 @@ method.getListing = async function (searchKeyWord) {
     }
 
     await Promise.resolve(history_call);
-
+   
     let result = {
       items: items,
-      popular_tags: popular_tags,
-      item_pricing: item_pricing,
+      popular_tags: Array.from(popular_tags.entries()),
+      item_pricing: Array.from(item_pricing.entries()),
       historical_metrices: historical_metrices
     };
     //console.log(result.historical_metrices.trends[0].month);
@@ -230,6 +231,7 @@ method.getListing = async function (searchKeyWord) {
 
           if (!popular_tags.has(item.tags[j].toLowerCase())) {
             let tag_properties = {
+              tag_name: item.tags[j].toLowerCase(),
               count: 0,
               processing_min: 0,
               processing_max: 0,
@@ -263,7 +265,7 @@ method.getListing = async function (searchKeyWord) {
       if (i % 1 == 0) {
         await Promise.all(calls);
         calls.splice(0, calls.length);
-        
+        await sleep(1000  )
       }
     }
     var historical_metrices;
@@ -293,8 +295,8 @@ method.getListing = async function (searchKeyWord) {
 
     let result = {
       items: items,
-      popular_tags: popular_tags,
-      item_pricing: item_pricing,
+      popular_tags: Array.from(popular_tags.entries()),
+      item_pricing: Array.from(item_pricing.entries()),
       historical_metrices: historical_metrices
     };
     return result;

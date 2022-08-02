@@ -25,7 +25,7 @@ method.getListingImages = async function (searchKeyWord) {
         'https://openapi.etsy.com/v3/application/listings/' + searchKeyWord + '/images?'
     );
 
-    return fetch(url, requestOptions).then(response => response.json());
+    return await fetch(url, requestOptions).then(response => response.json());
 };
 
 module.exports = Imageslisting;

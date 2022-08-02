@@ -44,6 +44,7 @@ app.get('/getListing/:keyword', async (req, res) => {
     var john = new Listing();
     
     let response = await john.getListing(req.params.keyword);
+    //console.log(response.popular_tags);
     res.end(JSON.stringify(response));
     // console.log(listing);
 });
@@ -121,6 +122,7 @@ app.get("/welcome", async (req, res) => {
 });
 
 // Start the server on port 3003
-app.listen(process.env.PORT || 3003, 
-	() => console.log("Server is running...")
-    );
+const port = 5000;
+app.listen(port, () => {
+    console.log(`Example app listening at http://localhost:${port}`);
+}); 
