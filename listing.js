@@ -122,7 +122,7 @@ method.getListing = async function (searchKeyWord) {
 
         );
      } catch (e){
-      console.log(e);
+      console.log(`listing id ${results.results[i].listing_id}`,e);
      } }));
       if (i % 1 == 0) {
         await Promise.all(calls);
@@ -130,7 +130,7 @@ method.getListing = async function (searchKeyWord) {
 
       }
       }catch (e){
-        console.log(e);
+        console.log(`listing id ${results.results[i].listing_id}`,e);
       }
     }
     var historical_metrices;
