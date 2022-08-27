@@ -32,7 +32,7 @@ method.getListing = async function (searchKeyWord) {
   );
   let response = await fetch(url, requestOptions);
   let results = await response.json();
-
+  let long_tail_keyword = searchKeyWord.indexOf(' ') >= 3;
   var calls = [];
 
   var items = [];
@@ -42,95 +42,96 @@ method.getListing = async function (searchKeyWord) {
     var Imagelisting = require("./listing_image.js");
     var john = new Imagelisting();
     var history = new History();
-    let popular_tags = new Map();
+    let popular_tags_map = new Map();
     let item_pricing = new Map();
     for (let i = 0; i < length; i++) {
       try {
-      calls.push(john.getListingImages(results.results[i].listing_id).then(response => {
+        calls.push(john.getListingImages(results.results[i].listing_id).then(response => {
 
-        try {
-        var images = [];
-        let total_images = response.results.length;
-        for (let i = 0; i < total_images; i++) {
-          let image = {
-            listing_id: response.results[i].listing_id,
-            listing_image_id: response.results[i].listing_image_id,
-            created_timestamp: response.results[i].created_timestamp,
-            url_75x75: response.results[i].url_75x75,
-            url_170x135: response.results[i].url_170x135,
-            url_570xN: response.results[i].url_570xN,
-            url_fullxfull: response.results[i].url_fullxfull,
-          };
-          images.push(
-            image
-          );
-        }
-        let item = {
-          listing_id: results.results[i].listing_id,
-          user_id: results.results[i].user_id,
-          shop_id: results.results[i].shop_id,
-          title: results.results[i].title,
-          description: results.results[i].description,
-          state: results.results[i].state,
-          quantity: results.results[i].quantity,
-          featured_rank: results.results[i].featured_rank,
-          url: results.results[i].url,
-          num_favorers: results.results[i].num_favorers,
-          tags: results.results[i].tags,
-          materials: results.results[i].materials,
-          who_made: results.results[i].who_made,
-          when_made: results.results[i].when_made,
-          price: results.results[i].price,
-          processing_min: results.results[i].processing_min,
-          processing_max: results.results[i].processing_max,
-          images: images,
-
-        };
-
-        for (let j = 0; j < item.tags.length; j++) {
-          
-          if (!popular_tags.has(item.tags[j].toLowerCase())) {
-            //console.log("Hello");
-            let tag_properties = {
-              count: 0,
-              processing_min: 0,
-              processing_max: 0,
-              photos: 0,
-              price: 0,
-              divisor: 0,
-
+          try {
+            var images = [];
+            let total_images = response.results.length;
+            for (let i = 0; i < total_images; i++) {
+              let image = {
+                listing_id: response.results[i].listing_id,
+                listing_image_id: response.results[i].listing_image_id,
+                created_timestamp: response.results[i].created_timestamp,
+                url_75x75: response.results[i].url_75x75,
+                url_170x135: response.results[i].url_170x135,
+                url_570xN: response.results[i].url_570xN,
+                url_fullxfull: response.results[i].url_fullxfull,
+              };
+              images.push(
+                image
+              );
             }
-            popular_tags.set(item.tags[j].toLowerCase(), tag_properties);
+            let item = {
+              listing_id: results.results[i].listing_id,
+              user_id: results.results[i].user_id,
+              shop_id: results.results[i].shop_id,
+              title: results.results[i].title,
+              description: results.results[i].description,
+              state: results.results[i].state,
+              quantity: results.results[i].quantity,
+              featured_rank: results.results[i].featured_rank,
+              url: results.results[i].url,
+              num_favorers: results.results[i].num_favorers,
+              tags: results.results[i].tags,
+              materials: results.results[i].materials,
+              who_made: results.results[i].who_made,
+              when_made: results.results[i].when_made,
+              price: results.results[i].price,
+              processing_min: results.results[i].processing_min,
+              processing_max: results.results[i].processing_max,
+              images: images,
+
+            };
+
+            for (let j = 0; j < item.tags.length; j++) {
+
+              if (!popular_tags_map.has(item.tags[j].toLowerCase())) {
+                //console.log("Hello");
+                let tag_properties = {
+                  count: 0,
+                  processing_min: 0,
+                  processing_max: 0,
+                  photos: 0,
+                  price: 0,
+                  divisor: 0,
+
+                }
+                popular_tags_map.set(item.tags[j].toLowerCase(), tag_properties);
+              }
+              let tag_properties = popular_tags_map.get(item.tags[j].toLowerCase());
+              tag_properties.count++;
+              tag_properties.processing_min += item.processing_min;
+              tag_properties.processing_max += item.processing_max;
+              tag_properties.price += item.price.amount;
+              tag_properties.photos += images.length;
+              tag_properties.divisor += item.price.divisor,
+              popular_tags_map.set(item.tags[j].toLowerCase(), tag_properties);
+            }
+            if (!item_pricing.has(item.price.amount)) {
+              item_pricing.set(item.price.amount, 0);
+            }
+            let count = item_pricing.get(item.price.amount);
+            item_pricing.set(item.price.amount, ++count);
+
+            items.push(
+              item,
+
+            );
+          } catch (e) {
+            console.log(`listing id ${results.results[i].listing_id}`, e);
           }
-          let tag_properties = popular_tags.get(item.tags[j].toLowerCase());
-          tag_properties.count++;
-          tag_properties.processing_min += item.processing_min;
-          tag_properties.processing_max += item.processing_max;
-          tag_properties.price += item.price.amount;
-          tag_properties.photos += images.length;
-          tag_properties.divisor += item.price.divisor,
-            popular_tags.set(item.tags[j].toLowerCase(), tag_properties);
+        }));
+        if (i % 1 == 0) {
+          await Promise.all(calls);
+          calls.splice(0, calls.length);
+
         }
-        if (!item_pricing.has(item.price.amount)) {
-          item_pricing.set(item.price.amount, 0);
-        }
-        let count = item_pricing.get(item.price.amount);
-        item_pricing.set(item.price.amount, ++count);
-
-        items.push(
-          item,
-
-        );
-     } catch (e){
-      console.log(`listing id ${results.results[i].listing_id}`,e);
-     } }));
-      if (i % 1 == 0) {
-        await Promise.all(calls);
-        calls.splice(0, calls.length);
-
-      }
-      }catch (e){
-        console.log(`listing id ${results.results[i].listing_id}`,e);
+      } catch (e) {
+        console.log(e);
       }
     }
     var historical_metrices;
@@ -157,21 +158,23 @@ method.getListing = async function (searchKeyWord) {
     }
 
     await Promise.resolve(history_call);
-   
+    let popular_tags= Array.from(popular_tags_map.entries());
     let result = {
       items: items,
-      popular_tags: Array.from(popular_tags.entries()),
+      popular_tags: popular_tags,
       item_pricing: Array.from(item_pricing.entries()),
-      historical_metrices: historical_metrices
+      historical_metrices: historical_metrices,
+      long_tail_keyword: long_tail_keyword,
+      competition: popular_tags.length,
     };
     //console.log(result.historical_metrices.trends[0].month);
     return result;
-  } else if (response.status == 401){
+  } else if (response.status == 401) {
 
 
     console.log("refreshing token...");
     var history = new History();
-    let popular_tags = new Map();
+    let popular_tags_map = new Map();
     let item_pricing = new Map();
     var Refreshtoken = require("./refresh_token.js");
     var john = new Refreshtoken();
@@ -183,7 +186,7 @@ method.getListing = async function (searchKeyWord) {
     let response = await fetch("https://openapi.etsy.com/v3/application/listings/active?", requestOptions);
 
     let results = await response.json();
- 
+
     var Imagelisting = require("./listing_image.js");
     var john = new Imagelisting();
     var history = new History();
@@ -229,7 +232,7 @@ method.getListing = async function (searchKeyWord) {
 
         for (let j = 0; j < item.tags.length; j++) {
 
-          if (!popular_tags.has(item.tags[j].toLowerCase())) {
+          if (!popular_tags_map.has(item.tags[j].toLowerCase())) {
             let tag_properties = {
               tag_name: item.tags[j].toLowerCase(),
               count: 0,
@@ -240,16 +243,16 @@ method.getListing = async function (searchKeyWord) {
               divisor: 0,
 
             }
-            popular_tags.set(item.tags[j].toLowerCase(), tag_properties);
+            popular_tags_map.set(item.tags[j].toLowerCase(), tag_properties);
           }
-          let tag_properties = popular_tags.get(item.tags[j].toLowerCase());
+          let tag_properties = popular_tags_map.get(item.tags[j].toLowerCase());
           tag_properties.count++;
           tag_properties.processing_min += item.processing_min;
           tag_properties.processing_max += item.processing_max;
           tag_properties.price += item.price.amount;
           tag_properties.photos += images.length;
           tag_properties.divisor += item.price.divisor,
-            popular_tags.set(item.tags[j].toLowerCase(), tag_properties);
+          popular_tags_map.set(item.tags[j].toLowerCase(), tag_properties);
         }
         if (!item_pricing.has(item.price.amount)) {
           item_pricing.set(item.price.amount, 0);
@@ -265,7 +268,7 @@ method.getListing = async function (searchKeyWord) {
       if (i % 1 == 0) {
         await Promise.all(calls);
         calls.splice(0, calls.length);
-        await sleep(1000  )
+        await sleep(1000)
       }
     }
     var historical_metrices;
@@ -292,12 +295,14 @@ method.getListing = async function (searchKeyWord) {
     }
 
     await Promise.resolve(history_call);
-
+    let popular_tags = Array.from(popular_tags_map.entries());
     let result = {
       items: items,
-      popular_tags: Array.from(popular_tags.entries()),
+      popular_tags: popular_tags,
       item_pricing: Array.from(item_pricing.entries()),
-      historical_metrices: historical_metrices
+      historical_metrices: historical_metrices,
+      long_tail_keyword: long_tail_keyword,
+      competition: popular_tags.length
     };
     return result;
   } else {

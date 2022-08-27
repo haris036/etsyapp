@@ -18,7 +18,7 @@ var requestOptions = {
 
 };
 
-function Imageslisting() {}
+function Imageslisting() { }
 
 method.getListingImages = async function (searchKeyWord) {
     const url = (
