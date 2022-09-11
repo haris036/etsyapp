@@ -16,6 +16,7 @@ let payload = {
 
 function History() { }
 method.getHistoricalMetrices = async function (searchKeyWord) {
+  payload.kw.push(searchKeyWord);
   return axios.post('https://api.keywordseverywhere.com/v1/get_keyword_data',
     qs.stringify(payload),
     {
