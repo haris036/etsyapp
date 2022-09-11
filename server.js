@@ -6,7 +6,13 @@ const cors = require("cors");
 // Create a new express application
 const app = express();
 
-app.use(cors());
+
+const corsOptions ={
+    origin:'*', 
+    credentials:true,            //access-control-allow-credentials:true
+    optionSuccessStatus:200,
+ }
+app.use(cors(corsOptions));
 
 app.set("view engine", "hbs");
 app.set("views", `${process.cwd()}/views`);
