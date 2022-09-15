@@ -17,7 +17,7 @@ method.getListing = async function (searchKeyWord) {
       api_key: api_key_info.api_key,
       keywords: searchKeyWord,
       limit: 100,
-      sort_on: "score",
+      sort_on: "created",
       includes: 'Images,ShippingInfo,MainImage'
     }).toString()
 
@@ -25,6 +25,7 @@ method.getListing = async function (searchKeyWord) {
   var history = new History();
   var historical_metrices;
   var material_wise_items_map = new Map();
+  var searches = 0;
   let history_call = history.getHistoricalMetrices(searchKeyWord).then(response => {
     for (let i = 0; i < response.data[0].trend.length; i++) {
       let trend = {
@@ -180,15 +181,15 @@ method.getListing = async function (searchKeyWord) {
         tag_properties.num_favorers += parseInt(item.num_favorers);
         tag_properties.long_tail = item.tags[j].toLowerCase().indexOf(' ') >= 2;
         popular_tags_map.set(item.tags[j].toLowerCase(), tag_properties);
-        if (tag_properties.long_tail) {
+        if (tag_properties.long_tail && item.tags[j].toLowerCase().includes(searchKeyWord.toLowerCase())) {
           long_tail_alternatives_map.set(item.tags[j].toLowerCase(), tag_properties);
         }
       }
-      if (!item_pricing.has(item.price.amount)) {
-        item_pricing.set(item.price.amount, 0);
+      if (!item_pricing.has(item.price)) {
+        item_pricing.set(item.price, 0);
       }
-      let count = item_pricing.get(item.price.amount);
-      item_pricing.set(item.price.amount, ++count);
+      let count = item_pricing.get(item.price);
+      item_pricing.set(item.price, ++count);
       items.push(
         item,
       );
