@@ -28,6 +28,14 @@ app.get('/getListing/:keyword', async (req, res) => {
     res.end(JSON.stringify(response));
 });
 
+app.get('/getSingleListing/:listing_id', async (req, res) => {
+    var SingleListing = require("./single_listing.js");
+    var john = new SingleListing();
+    let response = await john.getSingleListing(req.params.listing_id);
+    res.end(JSON.stringify(response));
+});
+
+
 // Start the server on port 3003
 app.listen(process.env.PORT || 3003, 
 	() => console.log("Server is running...")
