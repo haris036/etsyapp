@@ -10,7 +10,7 @@ function Listing() { }
 method.getListing = async function (searchKeyWord) {
   var items = [];
   var trends = [];
-
+  
   const url = (
     'https://openapi.etsy.com/v2/listings/active?' +
     new URLSearchParams({
@@ -26,6 +26,9 @@ method.getListing = async function (searchKeyWord) {
   var historical_metrices;
   var material_wise_items_map = new Map();
   var searches = 0;
+  var favourites = 0;
+  var average_price = 0.0;
+ 
   let history_call = history.getHistoricalMetrices(searchKeyWord).then(response => {
     for (let i = 0; i < response.data[0].trend.length; i++) {
       let trend = {
@@ -66,9 +69,12 @@ method.getListing = async function (searchKeyWord) {
     var sum_of_prices = 0.0;
     var long_tail_alternatives_map = new Map();
     let item_pricing = new Map();
-
+    var current_time = Date.now();
+    var similar_shopper_searches_map = new Map();
+    current_time = Math.round(current_time / 1000);
     for (let itemIndex = 0; itemIndex < length; itemIndex++) {
       var images = [];
+      // console.log(results.results[itemIndex].Images)
       let total_images = results.results[itemIndex].Images.length;
       for (let i = 0; i < total_images; i++) {
         let image = {
@@ -82,6 +88,7 @@ method.getListing = async function (searchKeyWord) {
           image
         );
       }
+
       for (let i = 0; i < results.results[itemIndex].ShippingInfo.length; i++) {
         if (shipping_day_prices.maximum_price == null || parseFloat(results.results[itemIndex].ShippingInfo[i].primary_cost) > shipping_day_prices.maximum_price) {
           shipping_day_prices.maximum_price = parseFloat(results.results[itemIndex].ShippingInfo[i].primary_cost);
@@ -97,6 +104,7 @@ method.getListing = async function (searchKeyWord) {
         shipping_price_count_map += 1;
         shipping_prices_map.set(results.results[itemIndex].ShippingInfo[i].primary_cost, shipping_price_count_map);
       }
+
       let item = {
         listing_id: results.results[itemIndex].listing_id,
         title: results.results[itemIndex].title,
@@ -111,7 +119,9 @@ method.getListing = async function (searchKeyWord) {
         price: results.results[itemIndex].price,
         images: images,
         views: results.results[itemIndex].views,
+        creation_time: results.results[itemIndex].original_creation_tsz,
       };
+
       for (let i = 0; i < item.materials.length; i++) {
         if (!material_wise_items_map.has(item.materials[i].toLowerCase())) {
           material_wise_items_map.set(item.materials[i].toLowerCase(), material_item = {
@@ -133,6 +143,7 @@ method.getListing = async function (searchKeyWord) {
         }
         material_item.sum_of_prices += parseFloat(item.price);
       }
+
       if (results.results[itemIndex].processing_min != null) {
         if (!shipping_days_map.has(results.results[itemIndex].processing_min)) {
           shipping_days_map.set(results.results[itemIndex].processing_min, 0);
@@ -147,6 +158,7 @@ method.getListing = async function (searchKeyWord) {
         shipping_days_map.set(results.results[itemIndex].processing_min, min_shipping_day);
         sum_of_days += results.results[itemIndex].processing_min;
       }
+
       if (results.results[itemIndex].processing_max != null) {
         if (!shipping_days_map.has(results.results[itemIndex].processing_max)) {
           shipping_days_map.set(results.results[itemIndex].processing_max, 0);
@@ -160,8 +172,8 @@ method.getListing = async function (searchKeyWord) {
         shipping_days_map.set(results.results[itemIndex].processing_max, max_shipping_day);
         sum_of_days += results.results[itemIndex].processing_max;
       }
-      for (let j = 0; j < item.tags.length; j++) {
 
+      for (let j = 0; j < item.tags.length; j++) {
         if (!popular_tags_map.has(item.tags[j].toLowerCase())) {
           let tag_properties = {
             count: 0,
@@ -170,24 +182,36 @@ method.getListing = async function (searchKeyWord) {
             views: 0,
             num_favorers: 0,
             long_tail: false,
+            days_to_ship: 0,
           }
           popular_tags_map.set(item.tags[j].toLowerCase(), tag_properties);
         }
+        average_price += parseFloat(item.price);
         let tag_properties = popular_tags_map.get(item.tags[j].toLowerCase());
         tag_properties.count++;
         tag_properties.price += parseFloat(item.price);
         tag_properties.photos += images.length
         tag_properties.views += item.views;
         tag_properties.num_favorers += parseInt(item.num_favorers);
+        favourites += parseInt(item.num_favorers);
         tag_properties.long_tail = item.tags[j].toLowerCase().indexOf(' ') >= 2;
+        tag_properties.days_to_ship = (results.results[itemIndex].processing_min == null ? 0 : results.results[itemIndex].processing_min + results.results[itemIndex].processing_max == null ? 0 : results.results[itemIndex].processing_max) / 2;
         popular_tags_map.set(item.tags[j].toLowerCase(), tag_properties);
         if (tag_properties.long_tail && item.tags[j].toLowerCase().includes(searchKeyWord.toLowerCase())) {
           long_tail_alternatives_map.set(item.tags[j].toLowerCase(), tag_properties);
         }
+        if (item.tags[j].toLowerCase().includes(searchKeyWord.toLowerCase())) {
+          similar_shopper_searches_map.set(item.tags[j].toLowerCase(), tag_properties)
+        }
       }
+
+      searches += item.views;
+        
+
       if (!item_pricing.has(item.price)) {
         item_pricing.set(item.price, 0);
       }
+
       let count = item_pricing.get(item.price);
       item_pricing.set(item.price, ++count);
       items.push(
@@ -202,6 +226,7 @@ method.getListing = async function (searchKeyWord) {
     let shipping_prices = Array.from(shipping_prices_map.entries());
     let long_tail_alternatives = Array.from(long_tail_alternatives_map.entries());
     let material_items = Array.from(material_wise_items_map.entries());
+    let similar_shopper_searches = Array.from(similar_shopper_searches_map.entries());
     let result = {
       items: items,
       popular_tags: popular_tags,
@@ -214,6 +239,11 @@ method.getListing = async function (searchKeyWord) {
       shipping_days: shipping_days,
       long_tail_alternatives: long_tail_alternatives,
       material_items: material_items,
+      avg_searches: searches/length,
+      searches: searches,
+      favourites: favourites,
+      average_price: average_price/length,
+      similar_shopper_searches: similar_shopper_searches,
     };
     // console.log(shipping_day_prices);
     return result;
