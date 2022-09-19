@@ -142,7 +142,7 @@ method.getListing = async function (searchKeyWord) {
                 maximum_price: null,
                 sum_of_prices: 0.0,
               });
-              category_item = material_item.category_wise_map.gett(item.category[j].toLowerCase);
+              category_item = material_item.category_wise_map.get(item.category[j].toLowerCase);
               category_item.count += 1
               if (category_item.minimum_price == null || category_item.minimum_price > parseFloat(item.price)) {
                 category_item.minimum_price = parseFloat(category_item.price);
