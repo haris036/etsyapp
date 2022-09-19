@@ -134,7 +134,7 @@ method.getListing = async function (searchKeyWord) {
           material_item = material_wise_items_map.get(item.materials[i].toLowerCase());
           // material_item.count += 1;
           for (let j = 0; j < item.category.length; j++) {
-            if (material_item.category_wise_map.has(item.category[j].toLowerCase)) {
+            if (material_item.category_wise_map.has(item.category[j].toLowerCase())) {
               material_item.category_wise_map.set(item.category[i].toLowerCase(), material_category_item = {
                 count: 0,
                 minimum_price: null,
@@ -142,7 +142,7 @@ method.getListing = async function (searchKeyWord) {
                 maximum_price: null,
                 sum_of_prices: 0.0,
               });
-              material_category_item = material_item.category_wise_map.get(item.category[j].toLowerCase);
+              material_category_item = material_item.category_wise_map.get(item.category[j].toLowerCase());
               material_category_item.count += 1
               if (material_category_item.minimum_price == null || material_category_item.minimum_price > parseFloat(item.price)) {
                 material_category_item.minimum_price = parseFloat(material_category_item.price);
