@@ -128,38 +128,23 @@ method.getListing = async function (searchKeyWord) {
         for (let i = 0; i < item.materials.length; i++) {
           if (!material_wise_items_map.has(item.materials[i].toLowerCase())) {
             material_wise_items_map.set(item.materials[i].toLowerCase(), material_item = {
-              category_wise_map: new Map(),
+              count: 0,
+              minimum_price: null,
+              average_price: 0.0,
+              maximum_price: null,
+              sum_of_prices: 0.0,
             });
+
           }
           material_item = material_wise_items_map.get(item.materials[i].toLowerCase());
-          // material_item.count += 1;
-          for (let j = 0; j < item.category.length; j++) {
-            if (material_item.category_wise_map.has(item.category[j].toLowerCase())) {
-              material_item.category_wise_map.set(item.category[i].toLowerCase(), material_category_item = {
-                count: 0,
-                minimum_price: null,
-                average_price: 0.0,
-                maximum_price: null,
-                sum_of_prices: 0.0,
-              });
-              material_category_item = material_item.category_wise_map.get(item.category[j].toLowerCase());
-              material_category_item.count += 1
-              if (material_category_item.minimum_price == null || material_category_item.minimum_price > parseFloat(item.price)) {
-                material_category_item.minimum_price = parseFloat(material_category_item.price);
-              }
-              if (material_category_item.maximum_price == null || material_category_item.maximum_price < parseFloat(item.price)) {
-                material_category_item.maximum_price = parseFloat(item.price);
-              }
-              material_category_item.sum_of_prices += parseFloat(item.price);
-            }
+          material_item.count += 1;
+          if (material_item.minimum_price == null || material_item.minimum_price > parseFloat(item.price)) {
+            material_item.minimum_price = parseFloat(item.price);
           }
-          // if (material_item.minimum_price == null || material_item.minimum_price > parseFloat(item.price)) {
-          //   material_item.minimum_price = parseFloat(item.price);
-          // }
-          // if (material_item.maximum_price == null || material_item.maximum_price < parseFloat(item.price)) {
-          //   material_item.maximum_price = parseFloat(item.price);
-          // }
-          // material_item.sum_of_prices += parseFloat(item.price);
+          if (material_item.maximum_price == null || material_item.maximum_price < parseFloat(item.price)) {
+            material_item.maximum_price = parseFloat(item.price);
+          }
+          material_item.sum_of_prices += parseFloat(item.price);
         }
 
         if (results.results[itemIndex].processing_min != null) {
@@ -244,8 +229,8 @@ method.getListing = async function (searchKeyWord) {
       let shipping_prices = Array.from(shipping_prices_map.entries());
       let long_tail_alternatives = Array.from(long_tail_alternatives_map.entries());
       // let material_items = new Map()
-      console.log(material_wise_items_map);
-      let material_items = toObject(material_wise_items_map);
+      // console.log(material_wise_items_map);
+      let material_items = Array.from(material_wise_items_map);
       let similar_shopper_searches = Array.from(similar_shopper_searches_map.entries());
       let result = {
         items: items,
