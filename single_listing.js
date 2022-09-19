@@ -54,8 +54,8 @@ method.getSingleListing = async function (listing_id) {
                 min_delivery_time: results.results[0].processing_min,
                 max_delivery_time: results.results[0].processing_max,
             }
-            if (i % 9 == 0){
-                sleep(1000)
+            if (i % 7 == 0){
+                await Promise.all(tags_call);
             }
             shipping_infos.push(shipping_info);
         }
@@ -81,7 +81,7 @@ method.getSingleListing = async function (listing_id) {
             
         }
 
-        await Promise.all(tags_call);
+        
         let item = {
             listing_id: results.results[0].listing_id,
             title: results.results[0].title,
