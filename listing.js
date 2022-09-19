@@ -128,7 +128,6 @@ method.getListing = async function (searchKeyWord) {
         for (let i = 0; i < item.materials.length; i++) {
           if (!material_wise_items_map.has(item.materials[i].toLowerCase())) {
             material_wise_items_map.set(item.materials[i].toLowerCase(), material_item = {
-
               category_wise_map: new Map(),
             });
           }
@@ -244,16 +243,9 @@ method.getListing = async function (searchKeyWord) {
       let shipping_days = Array.from(shipping_days_map.entries());
       let shipping_prices = Array.from(shipping_prices_map.entries());
       let long_tail_alternatives = Array.from(long_tail_alternatives_map.entries());
-      let material_items = new Map()
-      for (let k of Object.keys(material_wise_items_map)) {
-        if (material_wise_items_map[k] instanceof Object) {
-          material_items.set(k, objectToMap(material_wise_items_map[k]))
-        }
-        else {
-          material_items.set(k, material_wise_items_map[k])
-        }
-      }
-      // let material_items = Array.from(material_wise_items_map.entries());
+      // let material_items = new Map()
+      
+      let material_items = toObject(material_wise_items_map);
       let similar_shopper_searches = Array.from(similar_shopper_searches_map.entries());
       let result = {
         items: items,
@@ -286,6 +278,15 @@ method.getListing = async function (searchKeyWord) {
     console.log("Exception in calling getListing", e);
   }
 };
+
+const toObject = (map = new Map) =>
+  Array.from
+    ( map.entries()
+    , ([ k, v ]) =>
+        v instanceof Map
+          ? { key: k, value: toObject (v) }
+          : { key: k, value: v }
+    )
 
 function sleep(ms) {
   return new Promise((resolve) => {
