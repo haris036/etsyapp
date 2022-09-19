@@ -244,7 +244,7 @@ method.getListing = async function (searchKeyWord) {
       let shipping_prices = Array.from(shipping_prices_map.entries());
       let long_tail_alternatives = Array.from(long_tail_alternatives_map.entries());
       // let material_items = new Map()
-      
+      console.log(material_wise_items_map);
       let material_items = toObject(material_wise_items_map);
       let similar_shopper_searches = Array.from(similar_shopper_searches_map.entries());
       let result = {
