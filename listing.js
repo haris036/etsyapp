@@ -250,7 +250,7 @@ method.getListing = async function (searchKeyWord) {
           material_items.set(k, objectToMap(material_wise_items_map[k]))
         }
         else {
-          material_items.set(k, o[k])
+          material_items.set(k, material_wise_items_map[k])
         }
       }
       // let material_items = Array.from(material_wise_items_map.entries());
