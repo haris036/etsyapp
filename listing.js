@@ -142,15 +142,15 @@ method.getListing = async function (searchKeyWord) {
                 maximum_price: null,
                 sum_of_prices: 0.0,
               });
-              category_item = material_item.category_wise_map.get(item.category[j].toLowerCase);
-              category_item.count += 1
-              if (category_item.minimum_price == null || category_item.minimum_price > parseFloat(item.price)) {
-                category_item.minimum_price = parseFloat(category_item.price);
+              material_category_item = material_item.category_wise_map.get(item.category[j].toLowerCase);
+              material_category_item.count += 1
+              if (material_category_item.minimum_price == null || material_category_item.minimum_price > parseFloat(item.price)) {
+                material_category_item.minimum_price = parseFloat(material_category_item.price);
               }
-              if (category_item.maximum_price == null || category_item.maximum_price < parseFloat(item.price)) {
-                category_item.maximum_price = parseFloat(item.price);
+              if (material_category_item.maximum_price == null || material_category_item.maximum_price < parseFloat(item.price)) {
+                material_category_item.maximum_price = parseFloat(item.price);
               }
-              category_item.sum_of_prices += parseFloat(item.price);
+              material_category_item.sum_of_prices += parseFloat(item.price);
             }
           }
           // if (material_item.minimum_price == null || material_item.minimum_price > parseFloat(item.price)) {
