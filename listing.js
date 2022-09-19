@@ -25,7 +25,7 @@ method.getListing = async function (searchKeyWord) {
   try {
     var history = new History();
     var historical_metrices;
-    var material_wise_items_map = new Map();
+    
     var searches = 0;
     var favourites = 0;
     var average_price = 0.0;
@@ -71,6 +71,7 @@ method.getListing = async function (searchKeyWord) {
       var long_tail_alternatives_map = new Map();
       let item_pricing = new Map();
       var current_time = Date.now();
+      var material_wise_items_map = new Map();
       var similar_shopper_searches_map = new Map();
       current_time = Math.round(current_time / 1000);
       for (let itemIndex = 0; itemIndex < length; itemIndex++) {
@@ -121,28 +122,45 @@ method.getListing = async function (searchKeyWord) {
           images: images,
           views: results.results[itemIndex].views,
           creation_time: results.results[itemIndex].original_creation_tsz,
+          category: results.results[itemIndex].taxonomy_path,
         };
 
         for (let i = 0; i < item.materials.length; i++) {
           if (!material_wise_items_map.has(item.materials[i].toLowerCase())) {
             material_wise_items_map.set(item.materials[i].toLowerCase(), material_item = {
               count: 0,
-              minimum_price: null,
-              average_price: 0.0,
-              maximum_price: null,
-              sum_of_prices: 0.0,
+              category_wise_map: new Map(),
             });
-
           }
           material_item = material_wise_items_map.get(item.materials[i].toLowerCase());
-          material_item.count += 1;
-          if (material_item.minimum_price == null || material_item.minimum_price > parseFloat(item.price)) {
-            material_item.minimum_price = parseFloat(item.price);
+          material_item.count+=1;
+          for( let j = 0; j< item.category.length; j++){
+            if (material_item.category_wise_map.has(item.category[j].toLowerCase)){
+              material_item.category_wise_map.set(item.category[i].toLowerCase(), material_category_item = {
+                count: 0,
+                minimum_price: null,
+                average_price: 0.0,
+                maximum_price: null,
+                sum_of_prices: 0.0,
+              });
+              category_item = material_item.category_wise_map.gett(item.category[j].toLowerCase);
+              category_item.count+=1
+              if (category_item.minimum_price == null || category_item.minimum_price > parseFloat(item.price)) {
+                category_item.minimum_price = parseFloat(category_item.price);
+              }
+              if (category_item.maximum_price == null || category_item.maximum_price < parseFloat(item.price)) {
+                category_item.maximum_price = parseFloat(item.price);
+              }
+              category_item.sum_of_prices += parseFloat(item.price);
+            }
           }
-          if (material_item.maximum_price == null || material_item.maximum_price < parseFloat(item.price)) {
-            material_item.maximum_price = parseFloat(item.price);
-          }
-          material_item.sum_of_prices += parseFloat(item.price);
+          // if (material_item.minimum_price == null || material_item.minimum_price > parseFloat(item.price)) {
+          //   material_item.minimum_price = parseFloat(item.price);
+          // }
+          // if (material_item.maximum_price == null || material_item.maximum_price < parseFloat(item.price)) {
+          //   material_item.maximum_price = parseFloat(item.price);
+          // }
+          // material_item.sum_of_prices += parseFloat(item.price);
         }
 
         if (results.results[itemIndex].processing_min != null) {
