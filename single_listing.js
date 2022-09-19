@@ -76,7 +76,7 @@ method.getSingleListing = async function (listing_id) {
                 tags_data.push(tag_properties);
 
             }));
-            if (i % 9 == 0){
+            if (j % 9 == 0){
                 await Promise.all(tags_call);
             }
         }
