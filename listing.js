@@ -25,7 +25,7 @@ method.getListing = async function (searchKeyWord) {
   try {
     var history = new History();
     var historical_metrices;
-    
+
     var searches = 0;
     var favourites = 0;
     var average_price = 0.0;
@@ -128,14 +128,14 @@ method.getListing = async function (searchKeyWord) {
         for (let i = 0; i < item.materials.length; i++) {
           if (!material_wise_items_map.has(item.materials[i].toLowerCase())) {
             material_wise_items_map.set(item.materials[i].toLowerCase(), material_item = {
-              count: 0,
+              
               category_wise_map: new Map(),
             });
           }
           material_item = material_wise_items_map.get(item.materials[i].toLowerCase());
-          material_item.count+=1;
-          for( let j = 0; j< item.category.length; j++){
-            if (material_item.category_wise_map.has(item.category[j].toLowerCase)){
+          // material_item.count += 1;
+          for (let j = 0; j < item.category.length; j++) {
+            if (material_item.category_wise_map.has(item.category[j].toLowerCase)) {
               material_item.category_wise_map.set(item.category[i].toLowerCase(), material_category_item = {
                 count: 0,
                 minimum_price: null,
@@ -144,7 +144,7 @@ method.getListing = async function (searchKeyWord) {
                 sum_of_prices: 0.0,
               });
               category_item = material_item.category_wise_map.gett(item.category[j].toLowerCase);
-              category_item.count+=1
+              category_item.count += 1
               if (category_item.minimum_price == null || category_item.minimum_price > parseFloat(item.price)) {
                 category_item.minimum_price = parseFloat(category_item.price);
               }
@@ -244,7 +244,17 @@ method.getListing = async function (searchKeyWord) {
       let shipping_days = Array.from(shipping_days_map.entries());
       let shipping_prices = Array.from(shipping_prices_map.entries());
       let long_tail_alternatives = Array.from(long_tail_alternatives_map.entries());
-      let material_items = Object.fromEntries(material_wise_items_map.entries());
+      const toObject = (map = new Map) =>
+        Object.fromEntries
+          (Array.from
+            (material_wise_items_map.entries()
+              , ([k, v]) =>
+                v instanceof Map
+                  ? [k, toObject(v)]
+                  : [k, v]
+            )
+          )
+      // let material_items = Array.from(material_wise_items_map.entries());
       let similar_shopper_searches = Array.from(similar_shopper_searches_map.entries());
       let result = {
         items: items,
