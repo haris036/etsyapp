@@ -54,9 +54,7 @@ method.getSingleListing = async function (listing_id) {
                 min_delivery_time: results.results[0].processing_min,
                 max_delivery_time: results.results[0].processing_max,
             }
-            if (i % 7 == 0){
-                await Promise.all(tags_call);
-            }
+            
             shipping_infos.push(shipping_info);
         }
 
@@ -74,11 +72,13 @@ method.getSingleListing = async function (listing_id) {
                     favourites: response.favourites,
                     average_price: response.average_price,
                 };
-
+                
                 tags_data.push(tag_properties);
 
             }));
-            
+            if (i % 9 == 0){
+                await Promise.all(tags_call);
+            }
         }
 
         
