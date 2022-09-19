@@ -54,6 +54,9 @@ method.getSingleListing = async function (listing_id) {
                 min_delivery_time: results.results[0].processing_min,
                 max_delivery_time: results.results[0].processing_max,
             }
+            if (i % 9 == 0){
+                sleep(1000)
+            }
             shipping_infos.push(shipping_info);
         }
 
