@@ -114,6 +114,11 @@ app.get('/callback', async (req, res) => {
         }); 
 });
 
+/**
+These variables contain your API Key, the state sent
+in the initial authorization request, and the client verifier compliment
+to the code_challenge sent with the initial authorization request
+*/
 // Start the server on port 3003
 app.listen(process.env.PORT || 3003, 
 	() => console.log("Server is running...")
