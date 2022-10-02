@@ -3,7 +3,7 @@ const express = require('express');
 const fetch = require("node-fetch");
 const fs = require('fs');
 var http = require('http');
-OAuth = require('oauth');
+const OAuth = require('oauth');
 var nodeUrl = require('url');
 // Create a new express application
 
