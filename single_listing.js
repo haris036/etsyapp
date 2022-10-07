@@ -78,6 +78,7 @@ method.getSingleListing = async function (listing_id) {
             }));
             if (j % 9 == 0){
                 await Promise.all(tags_call);
+                tags_call.splice(0, tags_call.length);
             }
         }
 

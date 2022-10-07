@@ -2,8 +2,6 @@ const fetch = require("node-fetch");
 const fs = require('fs');
 const History = require("./history.js");
 let api_key_info = JSON.parse(fs.readFileSync("api_key.json"));
-var headers = new fetch.Headers();
-headers.append("x-api-key", api_key_info.api_key);
 var method = Listing.prototype;
 function Listing() { }
 
@@ -110,6 +108,7 @@ method.getListing = async function (searchKeyWord) {
         let item = {
           listing_id: results.results[itemIndex].listing_id,
           title: results.results[itemIndex].title,
+          user_id: results.results[itemIndex].user_id,
           description: results.results[itemIndex].description,
           state: results.results[itemIndex].state,
           quantity: results.results[itemIndex].quantity,
@@ -123,6 +122,7 @@ method.getListing = async function (searchKeyWord) {
           views: results.results[itemIndex].views,
           creation_time: results.results[itemIndex].original_creation_tsz,
           category: results.results[itemIndex].taxonomy_path,
+          days_to_ship: (results.results[itemIndex].processing_min == null ? 0 : results.results[itemIndex].processing_min + results.results[itemIndex].processing_max == null ? 0 : results.results[itemIndex].processing_max) / 2,
         };
 
         for (let i = 0; i < item.materials.length; i++) {
