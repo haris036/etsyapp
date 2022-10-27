@@ -83,6 +83,35 @@ app.get('/calenderHolidays', async (req, res) => {
   res.end(JSON.stringify(response));
 });
 
+
+
+app.get('/getUser', async (req, res) => {
+  var LoginOrSignUp = require("./login_or_signup.js");
+  var john = new LoginOrSignUp();
+  // console.log(req)
+  let response = john.getUser(parseFloat(req.query.user));
+  res.end(JSON.stringify(response));
+});
+
+
+app.get('/updateUser', async (req, res) => {
+  var LoginOrSignUp = require("./login_or_signup.js");
+  var john = new LoginOrSignUp();
+  // console.log(req)
+  let response = john.updateUser(req.query.email, req.query.password);
+  res.end(JSON.stringify(response));
+});
+
+
+app.get('/saveUser', async (req, res) => {
+  var LoginOrSignUp = require("./login_or_signup.js");
+  var john = new LoginOrSignUp();
+  // console.log(req)
+  let response = john.saveUser(req.query.email, req.query.password, req.query.is_subscribed);
+  res.end(JSON.stringify(response));
+});
+
+
 app.get('/callback', async (req, res) => {
   console.log("Asd");
   var urlObj = nodeUrl.parse(req.url, true);
