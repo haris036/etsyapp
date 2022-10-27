@@ -3,9 +3,8 @@ function ProfitCalculator() { }
 
 method.calculateProfit = function (custPrice, custShippingPrice, custCoupon, laborCost, materialCost, shippingCost, etsyAds,
     renewing, offsideAdsFeePer) {
-
     let cust_price = custPrice + custShippingPrice;
-    let discounted_price = custPrice - (custCoupon * custPrice / 100) + custShippingPrice;
+    let discounted_price = custCoupon == 0 ? 0 : (custPrice - (custCoupon * custPrice / 100) + custShippingPrice);
     let total_cost = laborCost + materialCost + shippingCost + etsyAds + renewing;
     let transaction_fee = (discounted_price == 0 ? cust_price : discounted_price) * 6.5 / 100;
     let payment_processing_fee = ((discounted_price == 0 ? cust_price : discounted_price) * 3 / 100) + 0.25;

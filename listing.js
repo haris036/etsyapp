@@ -264,14 +264,14 @@ method.getListing = async function (searchKeyWord) {
   }
 };
 
-const toObject = (map = new Map) =>
-  Array.from
-    ( map.entries()
-    , ([ k, v ]) =>
-        v instanceof Map
-          ? { key: k, value: toObject (v) }
-          : { key: k, value: v }
-    )
+// const toObject = (map = new Map) =>
+//   Array.from
+//     ( map.entries()
+//     , ([ k, v ]) =>
+//         v instanceof Map
+//           ? { key: k, value: toObject (v) }
+//           : { key: k, value: v }
+//     )
 
 function sleep(ms) {
   return new Promise((resolve) => {

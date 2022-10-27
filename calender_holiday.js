@@ -9,6 +9,7 @@ method.getCalenderHolidays = async function () {
     let year = d.getFullYear().toString();
     var countries_holidays = new Map();
     let country_holidays = [];
+    let holidays = new Set();
     let countries = [];
     countries.push("US", "DE", "UK");
 
@@ -38,7 +39,10 @@ method.getCalenderHolidays = async function () {
                     country: result_holiday.country.name,
                     date: result_holiday.date.iso,
                 }
-                country_holidays.push(holiday);
+                if (!holidays.has(holiday.name+holiday.date)){
+                    country_holidays.push(holiday);
+                    holidays.add(holiday.name+holiday.date);
+                }
             }
             countries_holidays.set(country, country_holidays);
             // console.log(shipping_day_prices);
@@ -49,7 +53,7 @@ method.getCalenderHolidays = async function () {
         } else {
             return `Error in getting results received respose code: ${response.status} response description: ${response.statusText}`;
         }
-        
+        holidays.clear();
     }
     let country_holidays_arr = Array.from(country_holidays);
     let result = {

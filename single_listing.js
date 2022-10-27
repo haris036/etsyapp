@@ -125,19 +125,7 @@ method.getSingleListing = async function (listing_id) {
     } else {
         return `Error in getting results received respose code: ${response.status} response description: ${response.statusText}`;
     }
-
-
-
-
-
-
 }
-
-
-
-
-
-
 
 function sleep(ms) {
     return new Promise((resolve) => {
