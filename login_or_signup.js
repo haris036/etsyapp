@@ -40,7 +40,7 @@ let uri =
 // authSource=${authSource}&authMechanism=${authMechanism}
 const client = new MongoClient(uri);
 
-method.getUser = async function (_user) {
+method.getUser = async function (_email) {
   let user_data = [];
   try {
 
@@ -49,7 +49,7 @@ method.getUser = async function (_user) {
     const database = client.db("etsy_database");
 
     const ratings = database.collection("user_data");
-    const cursor = ratings.find({ user: _user });
+    const cursor = ratings.find({ email: _email });
 
     await cursor.forEach(doc => user_data.push(doc));
 
@@ -118,6 +118,31 @@ method.updateUserPassword = async function (_email, _password) {
   }
   return response;
 }
+
+method.updateSubscription = async function (_email, _is_subscribed) {
+
+  try {
+
+    await client.connect();
+
+    var dbo = client.db("etsy_database");
+    var myquery = { email: _email };
+    var newvalues = { $set: { is_subscribed: _is_subscribed, last_updated: Date.now() } };
+    await dbo.collection("user_data").updateOne(myquery, newvalues);
+
+  } catch (e) {
+    console.log(e)
+  } finally {
+
+    await client.close();
+
+  }
+  let response = {
+    msg: "Updated",
+  }
+  return response;
+}
+
 // getUser("zkh").catch(console.dir);
 // saveUser("zkh@gmail.com", "Temp.123", "N").catch(console.dir);
 // updateUserPassword("zkh", "Temp.1234")
