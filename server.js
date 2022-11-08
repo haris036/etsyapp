@@ -91,7 +91,7 @@ app.get('/getUser', async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js");
   var john = new LoginOrSignUp();
   // console.log(req)
-  let response = john.getUser(req.query.email);
+  let response = await john.getUser(req.query.email);
   res.end(JSON.stringify(response));
 });
 
@@ -100,7 +100,7 @@ app.get('/updateUser', async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js");
   var john = new LoginOrSignUp();
   // console.log(req)
-  let response = john.updateUser(req.query.email, req.query.password);
+  let response = await john.updateUser(req.query.email, req.query.password);
   res.end(JSON.stringify(response));
 });
 
@@ -109,17 +109,15 @@ app.get('/saveUser', async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js");
   var john = new LoginOrSignUp();
   // console.log(req)
-  let response = john.saveUser(req.query.email, req.query.password, req.query.is_subscribed);
+  let response = await john.saveUser(req.query.email, req.query.password, req.query.is_subscribed);
   res.end(JSON.stringify(response));
 });
-
-
 
 app.get('/updateSubsciption', async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js");
   var john = new LoginOrSignUp();
   // console.log(req)
-  let response = john.updateSubscription(req.query.email, req.query.is_subscribed);
+  let response = await john.updateSubscription(req.query.email, req.query.is_subscribed);
   res.end(JSON.stringify(response));
 });
 
