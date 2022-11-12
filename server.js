@@ -83,15 +83,12 @@ app.get('/calenderHolidays', async (req, res) => {
   res.end(JSON.stringify(response));
 });
 
-
-
-
-
-app.get('/getUser', async (req, res) => {
++app.get('/getUser', async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js");
   var john = new LoginOrSignUp();
   // console.log(req)
   let response = await john.getUser(req.query.email);
+  // console.log(response);
   res.end(JSON.stringify(response));
 });
 
@@ -100,7 +97,7 @@ app.get('/updateUser', async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js");
   var john = new LoginOrSignUp();
   // console.log(req)
-  let response = await john.updateUser(req.query.email, req.query.password);
+  let response = await john.updateUserPassword(req.query.email, req.query.password);
   res.end(JSON.stringify(response));
 });
 
