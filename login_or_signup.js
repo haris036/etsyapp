@@ -116,7 +116,6 @@ method.getUser = async function (_email) {
     await client.close();
 
   }
- console.log(user_data);
   return user_data;
 }
 
