@@ -170,6 +170,10 @@ app.get('/callback', async (req, res) => {
   });
 });
 
+app.get('/callbackUrl', async (req, res) => {
+  console.log("request: "+ req);
+  console.log("response: "+ res);
+});
 
 /**
 These variables contain your API Key, the state sent
