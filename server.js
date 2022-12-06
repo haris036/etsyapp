@@ -170,6 +170,15 @@ app.get('/callback', async (req, res) => {
   });
 });
 
+app.get('/paymentProcess', async (req, res) => {
+  var PaymentGateway = require("./payment_gateway.js");
+  var john = new PaymentGateway();
+  // console.log(req)
+  let response = await john.subscribe();
+  res.end(JSON.stringify(response));
+});
+
+
 app.get('/callbackUrl', async (req, res) => {
   console.log("request: "+ req);
   console.log("response: "+ res);
