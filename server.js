@@ -180,8 +180,8 @@ app.get('/paymentProcess', async (req, res) => {
 
 
 app.get('/callbackUrl', async (req, res) => {
-  console.log("request: "+ req);
-  console.log("response: "+ res);
+  console.log("request: "+ JSON.stringify(req));
+  console.log("response: "+ JSON.stringify(res));
 });
 
 /**
