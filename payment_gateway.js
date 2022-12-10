@@ -21,7 +21,7 @@ method.subscribe = async function (first_name, last_name, email) {
     let response = await fetch("https://pakistan.paymob.com/api/auth/tokens", authRequestOptions)
         .then(response => response.json())
         .catch(error => console.log('error', error));
-    console.log(response);
+    // console.log(response);
     let auth_token = response.token;
 
 
@@ -54,7 +54,7 @@ method.subscribe = async function (first_name, last_name, email) {
     response = await fetch("https://pakistan.paymob.com/api/ecommerce/orders", orderRequestOptions)
         .then(response => response.json())
         .catch(error => console.log('error', error));
-    console.log(response);
+    // console.log(response);
     let id = response.id;
 
 
@@ -99,7 +99,7 @@ method.subscribe = async function (first_name, last_name, email) {
     response = await fetch("https://pakistan.paymob.com/api/acceptance/payment_keys", requestOptions)
         .then(response => response.json())
         .catch(error => console.log('error', error));
-    console.log(response);
+    // console.log(response);
     let payment_key = response.token;
     let returnResponse = {
         url: "https://pakistan.paymob.com/api/acceptance/iframes/71516?payment_token=" + payment_key
