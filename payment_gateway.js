@@ -7,12 +7,10 @@ var method = PaymentGateway.prototype;
 function PaymentGateway() { };
 
 
-module.subscribe = async function () {
+method.subscribe = async function (first_name, last_name, email) {
     let auth_data = {
         api_key: api_key_info.paymob_api_key
     }
-
-
     var authRequestOptions = {
         method: 'POST',
         headers: headers,
@@ -23,7 +21,7 @@ module.subscribe = async function () {
     let response = await fetch("https://pakistan.paymob.com/api/auth/tokens", authRequestOptions)
         .then(response => response.json())
         .catch(error => console.log('error', error));
-
+    console.log(response);
     let auth_token = response.token;
 
 
@@ -31,8 +29,8 @@ module.subscribe = async function () {
 
         auth_token: auth_token,
         delivery_needed: "false",
-        amount_cents: "10",
-        currency: "PKR",
+        amount_cents: "1900",
+        currency: "USD",
         items: [
             {
                 name: "Subscription Payment",
@@ -56,7 +54,7 @@ module.subscribe = async function () {
     response = await fetch("https://pakistan.paymob.com/api/ecommerce/orders", orderRequestOptions)
         .then(response => response.json())
         .catch(error => console.log('error', error));
-
+    console.log(response);
     let id = response.id;
 
 
@@ -64,23 +62,23 @@ module.subscribe = async function () {
 
 
         auth_token: auth_token,
-        amount_cents: "10",
+        amount_cents: "1900",
         expiration: 3600,
         order_id: id,
         billing_data: {
-            apartment: "573",
-            email: "haris.arif103@gmail.com",
-            floor: "1",
-            first_name: "Muhammad",
-            street: "Shamnagar",
-            building: "573",
-            phone_number: "+923004008602",
-            postal_code: "54000",
-            extra_description: "8 Ram , 128 Giga",
-            city: "Lahore",
-            country: "PK",
-            last_name: "Haris",
-            state: "Utah"
+            apartment: "NA",
+            email: email,
+            floor: "NA",
+            first_name: first_name,
+            street: "NA",
+            building: "NA",
+            phone_number: "NA",
+            postal_code: "NA",
+            extra_description: "NA",
+            city: "NA",
+            country: "NA",
+            last_name: last_name,
+            state: "NA"
         },
         currency: "PKR",
         integration_id: 48242,
@@ -101,6 +99,7 @@ module.subscribe = async function () {
     response = await fetch("https://pakistan.paymob.com/api/acceptance/payment_keys", requestOptions)
         .then(response => response.json())
         .catch(error => console.log('error', error));
+    console.log(response);
     let payment_key = response.token;
     let returnResponse = {
         url: "https://pakistan.paymob.com/api/acceptance/iframes/71516?payment_token=" + payment_key
@@ -108,3 +107,5 @@ module.subscribe = async function () {
 
     return returnResponse;
 }
+
+module.exports = PaymentGateway;
