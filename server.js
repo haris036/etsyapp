@@ -174,15 +174,15 @@ app.get('/paymentProcess', async (req, res) => {
   var PaymentGateway = require("./payment_gateway.js");
   var john = new PaymentGateway();
   // console.log(req)
-  let response = await john.subscribe();
+  let response = await john.subscribe(req.query.first_name, req.query.last_name, req.query.email);
   res.end(JSON.stringify(response));
 });
 
 
-app.get('/callbackUrl', async (req, res) => {
-  console.log("request: "+ JSON.stringify(req));
-  console.log("response: "+ JSON.stringify(res));
-});
+// app.get('/callbackUrl', async (req, res) => {
+//   console.log("request: "+ JSON.stringify(req));
+//   console.log("response: "+ JSON.stringify(res));
+// });
 
 /**
 These variables contain your API Key, the state sent
