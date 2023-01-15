@@ -59,7 +59,7 @@ method.getSingleListing = async function (listing_id) {
         }
 
         for (let j = 0; j < results.results[0].tags.length; j++) {
-
+            sleep(300);
             tags_call.push( listings.getListing( results.results[0].tags[j]).then(response => {
                 // console.log(response);
                 let  tag_properties = {
