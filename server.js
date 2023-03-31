@@ -83,7 +83,7 @@ app.get('/calenderHolidays', async (req, res) => {
   res.end(JSON.stringify(response));
 });
 
-+app.get('/getUser', async (req, res) => {
++app.get('/signIn', async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js");
   var john = new LoginOrSignUp();
   // console.log(req)
@@ -93,7 +93,7 @@ app.get('/calenderHolidays', async (req, res) => {
 });
 
 
-app.get('/updateUser', async (req, res) => {
+app.get('/changePassword', async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js");
   var john = new LoginOrSignUp();
   // console.log(req)
@@ -102,7 +102,7 @@ app.get('/updateUser', async (req, res) => {
 });
 
 
-app.get('/saveUser', async (req, res) => {
+app.get('/signUp', async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js");
   var john = new LoginOrSignUp();
   // console.log(req)
