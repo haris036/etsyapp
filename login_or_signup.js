@@ -98,7 +98,7 @@ method.updateSubscription = async function (_email, _is_subscribed) {
 }
 
 
-method.getUser = async function (_email) {
+method.getUser = async function (_email, _password) {
   let user_data = [];
   try {
 
@@ -110,7 +110,12 @@ method.getUser = async function (_email) {
     const cursor = ratings.find({ email: _email });
 
     await cursor.forEach(doc => user_data.push(doc));
-
+    if (user_data[0].password != _password) {
+      let response = {
+        code: "401",
+        message: "unauthorized",
+      }
+    }
   } catch (e) {
     return e
   } finally {
