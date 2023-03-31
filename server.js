@@ -87,7 +87,7 @@ app.get('/calenderHolidays', async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js");
   var john = new LoginOrSignUp();
   // console.log(req)
-  let response = await john.getUser(req.query.email);
+  let response = await john.getUser(req.query.email, req.query.password);
   // console.log(response);
   res.end(JSON.stringify(response));
 });
