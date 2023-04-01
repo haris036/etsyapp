@@ -68,3 +68,41 @@
     
 ###sign up
     http://eprimedata.com/api/v1/signUp?email=haris.arif103@gmail.com&password=12345678&is_subscribed=N
+    
+    response = {
+      user: user_id,
+      inserted_id,
+    }
+    
+### sign in
+    http://eprimedata.com/api/v1/signIn?email=haris.arif103@gmail.com&password=1234
+    
+    user,
+        password,
+        creation_time,
+        email,
+        is_subscribed,
+        last_updated,
+        expiry,
+        
+###change password
+    http://eprimedata.com/api/v1/changePassword?email=haris.arif103@gmail.com&password=43122
+    
+    {msg: "Updated"}
+    
+###update subscribtion
+    http://eprimedata.com/api/v1/updateSubsciption?email=haris.arif103@gmail.com&is_subscribed=Y
+    
+    {msg: "Updated"}
+    
+###calender holidays
+    http://eprimedata.com/api/v1/calenderHolidays
+    
+    country_holidays result 
+    
+    holiday = {
+        name: holiday name,
+        description: holiday description,
+        country: holiday country name,
+        date: holiday date,
+    }
