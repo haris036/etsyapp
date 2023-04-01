@@ -4,7 +4,7 @@
 ## apis
 ### Get Listing
     It is an api to provide you search results of products against your provided keyword
-    
+    https://eprimedata.com/api/v1/getListing/ps4
     result = {
         items: items lists cotaining  item edtails,
         popular_tags: popular tags against resulted products,
@@ -25,7 +25,7 @@
       }
 ### single lisiting
     It is data of single item.
-    http://eprimedata.com/api/v1/getSingleListing/1336559064
+    https://eprimedata.com/api/v1/getSingleListing/1336559064
     
       item = {
             listing_id: id of the item,
@@ -54,7 +54,7 @@
         }
         
 ##profit calculator
-    http://eprimedata.com/api/v1/calculateProfit?cust_price=1&cust_shipping_price=1&cust_coupon=0&labor_cost=0&material_cost=0&shipping_cost=0&etsy_ads=0&renewing=0&offside_ads_fee_per=0
+    https://eprimedata.com/api/v1/calculateProfit?cust_price=1&cust_shipping_price=1&cust_coupon=0&labor_cost=0&material_cost=0&shipping_cost=0&etsy_ads=0&renewing=0&offside_ads_fee_per=0
     
     
     cust_price,
@@ -67,7 +67,7 @@
     estimated_margin,
     
 ###sign up
-    http://eprimedata.com/api/v1/signUp?email=haris.arif103@gmail.com&password=12345678&is_subscribed=N
+    https://eprimedata.com/api/v1/signUp?email=haris.arif103@gmail.com&password=12345678&is_subscribed=N
     
     response = {
       user: user_id,
@@ -75,7 +75,7 @@
     }
     
 ### sign in
-    http://eprimedata.com/api/v1/signIn?email=haris.arif103@gmail.com&password=1234
+    https://eprimedata.com/api/v1/signIn?email=haris.arif103@gmail.com&password=1234
     
     user,
         password,
@@ -86,17 +86,17 @@
         expiry,
         
 ###change password
-    http://eprimedata.com/api/v1/changePassword?email=haris.arif103@gmail.com&password=43122
+    https://eprimedata.com/api/v1/changePassword?email=haris.arif103@gmail.com&password=43122
     
     {msg: "Updated"}
     
 ###update subscribtion
-    http://eprimedata.com/api/v1/updateSubsciption?email=haris.arif103@gmail.com&is_subscribed=Y
+    https://eprimedata.com/api/v1/updateSubsciption?email=haris.arif103@gmail.com&is_subscribed=Y
     
     {msg: "Updated"}
     
 ###calender holidays
-    http://eprimedata.com/api/v1/calenderHolidays
+    https://eprimedata.com/api/v1/calenderHolidays
     
     country_holidays result 
     
