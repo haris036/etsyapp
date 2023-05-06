@@ -1,11 +1,12 @@
 const { MongoClient } = require("mongodb");
-
+// const jwt = require("jsonwebtoken");
 const username = encodeURIComponent("harisarif103");
 
 const password = encodeURIComponent("Temp.123");
 
 const cluster = "mycluster.u9r3f1e.mongodb.net";
 
+const GenerateToken = require("./generator/token_generator")
 var method = LoginOrSignup.prototype;
 function LoginOrSignup() { }
 
@@ -27,7 +28,16 @@ method.saveUser = async function (_email, _password, _is_subscribed) {
     console.log(usr)
     const collection = database.collection("user_data");
 
-    const doc = { user: usr, password: _password, creation_time: Date.now(), email: _email, is_subscribed: _is_subscribed, last_updated: null, expiry: Date.now() + 2592000 };
+    const doc = {
+      user: usr,
+      password: _password,
+      creation_time: Date.now(),
+      email: _email,
+      is_subscribed: _is_subscribed,
+      last_updated: null,
+      expiry: Date.now() + 2592000,
+      subscribed_date: Date.now()
+    };
     const result = await collection.insertOne(doc);
 
     console.log(
@@ -35,7 +45,7 @@ method.saveUser = async function (_email, _password, _is_subscribed) {
     );
     insert_id = result.insertedId;
   } catch (e) {
-    if ( e.code === 11000) {
+    if (e.code === 11000) {
       return "User already exists with same email id"
     }
     else {
@@ -48,7 +58,7 @@ method.saveUser = async function (_email, _password, _is_subscribed) {
   }
   let response = {
     user: usr,
-    inserted_id: insert_id
+    inserted_id: insert_id,
   }
   return response;
 }
@@ -61,7 +71,12 @@ method.updateUserPassword = async function (_email, _password) {
 
     var dbo = client.db("etsy_database");
     var myquery = { email: _email };
-    var newvalues = { $set: { password: _password, last_updated: Date.now() } };
+    var newvalues = {
+      $set: {
+        password: _password,
+        last_updated: Date.now()
+      }
+    };
     await dbo.collection("user_data").updateOne(myquery, newvalues);
 
   } catch (e) {
@@ -82,7 +97,13 @@ method.updateSubscription = async function (_email, _is_subscribed) {
     await client.connect();
     var dbo = client.db("etsy_database");
     var myquery = { email: _email };
-    var newvalues = { $set: { is_subscribed: _is_subscribed, last_updated: Date.now() } };
+    var newvalues = {
+      $set: {
+        is_subscribed: _is_subscribed,
+        last_updated: Date.now(),
+        subscribed_date: Date.now()
+      }
+    };
     await dbo.collection("user_data").updateOne(myquery, newvalues);
   } catch (e) {
     return e
@@ -99,23 +120,57 @@ method.updateSubscription = async function (_email, _is_subscribed) {
 
 
 method.getUser = async function (_email, _password) {
-  let user_data = [];
+
+  let user_info;
   try {
 
     await client.connect();
 
     const database = client.db("etsy_database");
-
-    const ratings = database.collection("user_data");
-    const cursor = ratings.find({ email: _email });
-
-    await cursor.forEach(doc => user_data.push(doc));
-    if (user_data[0].password != _password) {
-      let response = {
-        code: "401",
-        message: "unauthorized",
-      }
+    const users = database.collection("user_data");
+    const user_data = await users.findOne({ email: _email });
+    let response;
+    var tokenGenerator = new GenerateToken();
+    if (user_data[0].password == _password) {
+      response = tokenGenerator.getToken(_email);
     }
+
+    user_info = {
+      email: user_data.email,
+      access_token: response.access_token,
+      refresh_token: response.refresh_token,
+    }
+    console.log(user_info)
+  } catch (e) {
+    console.log(e)
+    return e
+  } finally {
+
+    await client.close();
+
+  }
+
+  return user_info;
+}
+
+method.updateProfile = async function (_email, _country, _date_of_birth, _contact_no) {
+
+  try {
+
+    await client.connect();
+
+    var dbo = client.db("etsy_database");
+    var myquery = { email: _email };
+    var newvalues = {
+      $set: {
+        country: _country,
+        date_of_birth: _date_of_birth,
+        contact_no: _contact_no,
+        last_updated: Date.now()
+      }
+    };
+    await dbo.collection("user_data").updateOne(myquery, newvalues);
+
   } catch (e) {
     return e
   } finally {
@@ -124,7 +179,73 @@ method.getUser = async function (_email, _password) {
 
   }
 
-  return user_data;
+  return user_info;
+}
+
+method.deleteAccount = async function (_email,) {
+
+  try {
+
+    await client.connect();
+
+    var dbo = client.db("etsy_database");
+    var myquery = { email: _email };
+    await dbo.collection("user_data").deleteOne(myquery,)
+
+
+  } catch (e) {
+    return e
+  } finally {
+    await client.close();
+  }
+  let response = {
+    msg: "Updated",
+  }
+  return response;
+}
+
+method.forgotPassword = async function (_email,) {
+
+  let user_info;
+  try {
+
+    await client.connect();
+
+    const database = client.db("etsy_database");
+    const users = database.collection("user_data");
+    const user_data = await users.findOne({ email: _email });
+    var tokenGenerator = new GenerateToken();
+    let response = tokenGenerator.getResetPasswordToken(_email);
+    user_info = {
+      access_token: response.access_token,
+    }
+    console.log(user_info)
+    var EmailHelper = require("./helper/email_helper.js");
+    var john = new EmailHelper();
+    // console.log(req.session);
+    // console.log(req)
+    response = await john.resetPasswordEmail(_email, user_info.access_token, user_info.access_token);
+
+    const doc = {
+      email: _email,
+      reset_password: user_info.access_token,
+      upsert: true,
+    };
+    const tokens = database.collection("user_tokens");
+
+    const result = await tokens.replaceOne(doc);
+
+
+    // console.log(response);
+  } catch (e) {
+    return e
+  } finally {
+    await client.close();
+  }
+  let response = {
+    msg: "email generated",
+  }
+  return response;
 }
 
 

@@ -2,24 +2,37 @@ const fetch = require("node-fetch");
 const fs = require('fs');
 const History = require("./history.js");
 let api_key_info = JSON.parse(fs.readFileSync("api_key.json"));
+const { MongoClient } = require("mongodb");
+const client = new MongoClient(uri);
 var method = Listing.prototype;
 function Listing() { }
+var myHeaders = new fetch.Headers();
+myHeaders.append("x-api-key", "7vudmbql4ympd8mrzsajli9n");
+var requestOptions = {
+  method: 'GET',
+  headers: myHeaders,
+  redirect: 'follow'
+};
 
-method.getListing = async function (searchKeyWord) {
+method.getListing = async function (searchKeyWord, email) {
   var items = [];
   var trends = [];
 
-  const url = (
-    'https://openapi.etsy.com/v2/listings/active?' +
+
+
+  const urlGetActiveListings = (
+    'https://openapi.etsy.com/v3/application/listings/active?' +
     new URLSearchParams({
-      api_key: api_key_info.api_key,
+      // api_key: api_key_info.api_key,
       keywords: searchKeyWord,
       limit: 100,
-      sort_on: "created",
-      includes: 'Images,ShippingInfo,MainImage'
+      // sort_on: "created",
+      // includes: 'Images,ShippingInfo,MainImage'
     }).toString()
 
   );
+
+
   try {
     var history = new History();
     var historical_metrices;
@@ -44,13 +57,38 @@ method.getListing = async function (searchKeyWord) {
       }
 
     });
-    let response = await fetch(url);
+    let response = await fetch(urlGetActiveListings, requestOptions);
     let results = await response.json();
     let long_tail_keyword = searchKeyWord.indexOf(' ') >= 3;
-
+    var listing_ids = [];
     if (response.status == 200) {
       var length = results.results.length;
       var competition = results.count;
+      for (let item of results.results) {
+        listing_ids.push(item.listing_id)
+      }
+    }
+
+    else {
+      return `Error in getting results received respose code: ${response.status} response description: ${response.statusText}`;
+    }
+    console.log(listing_ids);
+    const urlBatchListingIds = (
+      'https://openapi.etsy.com/v3/application/listings/batch?' +
+      new URLSearchParams({
+        // api_key: api_key_info.api_key,
+        listing_ids: listing_ids,
+        includes: 'Images,Shipping',
+      }).toString()
+
+    );
+    console.log(urlBatchListingIds)
+    response = await fetch(urlBatchListingIds, requestOptions);
+    results = await response.json();
+
+    if (response.status == 200) {
+
+
       let popular_tags_map = new Map();
       let shipping_prices_map = new Map();
       let shipping_days_map = new Map();
@@ -72,58 +110,127 @@ method.getListing = async function (searchKeyWord) {
       var material_wise_items_map = new Map();
       var similar_shopper_searches_map = new Map();
       current_time = Math.round(current_time / 1000);
-      for (let itemIndex = 0; itemIndex < length; itemIndex++) {
+      var length = results.results.length;
+      let _items = results.results;
+      var _count = 0;
+      console.log(length);
+      for (let _item of _items) {
+        _count += 1;
+        // console.log(_count);
+        // console.log(items.length)
         var images = [];
+        // console.log(results.results[itemIndex])
         // console.log(results.results[itemIndex].Images)
-        let total_images = results.results[itemIndex].Images.length;
-        for (let i = 0; i < total_images; i++) {
+        // let total_images = _item.images.length;
+        // console.log(_item)
+        for (let _image of _item.images) {
           let image = {
-            listing_image_id: results.results[itemIndex].Images[i].listing_image_id,
-            url_75x75: results.results[itemIndex].Images[i].url_75x75,
-            url_170x135: results.results[itemIndex].Images[i].url_170x135,
-            url_570xN: results.results[itemIndex].Images[i].url_570xN,
-            url_fullxfull: results.results[itemIndex].Images[i].url_fullxfull,
+            listing_image_id: _image.listing_image_id,
+            url_75x75: _image.url_75x75,
+            url_170x135: _image.url_170x135,
+            url_570xN: _image.url_570xN,
+            url_fullxfull: _image.url_fullxfull,
           };
           images.push(
             image
           );
         }
+        // console.log(results.results[itemIndex].shipping_profile_destinations)
+        let max_shipping_item_day = null;
+        let min_shipping_item_day = null;
+        // console.log(_item.shipping_profile);
 
-        for (let i = 0; i < results.results[itemIndex].ShippingInfo.length; i++) {
-          if (shipping_day_prices.maximum_price == null || parseFloat(results.results[itemIndex].ShippingInfo[i].primary_cost) > shipping_day_prices.maximum_price) {
-            shipping_day_prices.maximum_price = parseFloat(results.results[itemIndex].ShippingInfo[i].primary_cost);
-          } else if (shipping_day_prices.minimum_price == null || parseFloat(results.results[itemIndex].ShippingInfo[i].primary_cost) < shipping_day_prices.minimum_price) {
-            shipping_day_prices.minimum_price = parseFloat(results.results[itemIndex].ShippingInfo[i].primary_cost);
+        // let item_shipping_days_count = 0;
+        for (let shipping_profile_destinations of _item.shipping_profile.shipping_profile_destinations) {
+          let primary_amount = (parseFloat(shipping_profile_destinations.primary_cost.amount) / parseFloat(shipping_profile_destinations.primary_cost.divisor));
+          if (primary_amount != null) {
+            if (shipping_day_prices.maximum_price == null || primary_amount > shipping_day_prices.maximum_price) {
+              shipping_day_prices.maximum_price = primary_amount;
+            } else if (shipping_day_prices.minimum_price == null || primary_amount < shipping_day_prices.minimum_price) {
+              shipping_day_prices.minimum_price = primary_amount;
+            }
+
+            shipping_prices_count += 1;
+            sum_of_prices += parseFloat(primary_amount);
+            if (!shipping_prices_map.has(primary_amount)) {
+              shipping_prices_map.set(primary_amount, 0);
+            }
+            let shipping_price_count_map = shipping_prices_map.get(primary_amount);
+            shipping_price_count_map += 1;
+            shipping_prices_map.set(primary_amount, shipping_price_count_map);
           }
-          shipping_prices_count += 1;
-          sum_of_prices += parseFloat(results.results[itemIndex].ShippingInfo[i].primary_cost);
-          if (!shipping_prices_map.has(results.results[itemIndex].ShippingInfo[i].primary_cost)) {
-            shipping_prices_map.set(results.results[itemIndex].ShippingInfo[i].primary_cost, 0);
+          if (shipping_profile_destinations.min_delivery_days != null && shipping_profile_destinations.max_delivery_days != null) {
+            // avg_days_to_ship += (shipping_profile_destinations.min_delivery_days == null ? 0 : shipping_profile_destinations.min_delivery_days + shipping_profile_destinations.max_delivery_days == null ? 0 : shipping_profile_destinations.max_delivery_days) / 2;
+            if (!shipping_days_map.has(shipping_profile_destinations.min_delivery_days)) {
+              shipping_days_map.set(shipping_profile_destinations.min_delivery_days, 0);
+            }
+            if (shipping_day_prices.minimum_days == null || shipping_day_prices.minimum_days > shipping_profile_destinations.min_delivery_days) {
+              shipping_day_prices.minimum_days = shipping_profile_destinations.min_delivery_days;
+            }
+
+            if (min_shipping_item_day == null || min_shipping_item_day > shipping_profile_destinations.min_delivery_days) {
+              min_shipping_item_day = shipping_profile_destinations.min_delivery_days;
+            }
+            shipping_days_count += 1;
+            let min_shipping_day = shipping_days_map.get(shipping_profile_destinations.min_delivery_days);
+            min_shipping_day += 1;
+
+            shipping_days_map.set(shipping_profile_destinations.min_delivery_days, min_shipping_day);
+            sum_of_days += shipping_profile_destinations.min_delivery_days;
+
+            if (!shipping_days_map.has(shipping_profile_destinations.max_delivery_days)) {
+              shipping_days_map.set(shipping_profile_destinations.max_delivery_days, 0);
+            }
+
+            let max_shipping_day = shipping_days_map.get(shipping_profile_destinations.max_delivery_days);
+            if (shipping_day_prices.maximum_days == null || shipping_day_prices.maximum_days < shipping_profile_destinations.max_delivery_days) {
+              shipping_day_prices.maximum_days = shipping_profile_destinations.max_delivery_days;
+            }
+
+            if (max_shipping_item_day == null || max_shipping_item_day < shipping_profile_destinations.max_delivery_days) {
+              max_shipping_item_day = shipping_profile_destinations.max_delivery_days;
+            }
+            max_shipping_day += 1;
+            shipping_days_map.set(shipping_profile_destinations.max_delivery_days, max_shipping_day);
+            sum_of_days += shipping_profile_destinations.max_delivery_days;
+            item_shipping_days_count += 1;
           }
-          let shipping_price_count_map = shipping_prices_map.get(results.results[itemIndex].ShippingInfo[i].primary_cost);
-          shipping_price_count_map += 1;
-          shipping_prices_map.set(results.results[itemIndex].ShippingInfo[i].primary_cost, shipping_price_count_map);
+        }
+        // console.log("avg_days_to_ship: " + avg_days_to_ship);
+        // console.log("shipping_prices_count: " + shipping_prices_count)
+        // if (avg_days_to_ship != 0) {
+        //   console.log(avg_days_to_ship+ " "+ shipping_days_count )
+        // }
+        let item = {
+          listing_id: _item.listing_id,
+          title: _item.title,
+          user_id: _item.user_id,
+          description: _item.description,
+          state: _item.state,
+          quantity: _item.quantity,
+          featured_rank: _item.featured_rank,
+          url: _item.url,
+          num_favorers: _item.num_favorers,
+          tags: _item.tags,
+          materials: _item.materials,
+          price: _item.price.amount / _item.price.divisor,
+          images: images,
+          views: _item.views,
+          creation_time: _item.original_creation_timestamp,
+          category: _item.taxonomy_path,
+          min_max_shipping_days: "",
+        };
+        if (min_shipping_item_day != null) {
+          item.min_max_shipping_days = min_shipping_item_day + "";
         }
 
-        let item = {
-          listing_id: results.results[itemIndex].listing_id,
-          title: results.results[itemIndex].title,
-          user_id: results.results[itemIndex].user_id,
-          description: results.results[itemIndex].description,
-          state: results.results[itemIndex].state,
-          quantity: results.results[itemIndex].quantity,
-          featured_rank: results.results[itemIndex].featured_rank,
-          url: results.results[itemIndex].url,
-          num_favorers: results.results[itemIndex].num_favorers,
-          tags: results.results[itemIndex].tags,
-          materials: results.results[itemIndex].materials,
-          price: results.results[itemIndex].price,
-          images: images,
-          views: results.results[itemIndex].views,
-          creation_time: results.results[itemIndex].original_creation_tsz,
-          category: results.results[itemIndex].taxonomy_path,
-          days_to_ship: (results.results[itemIndex].processing_min == null ? 0 : results.results[itemIndex].processing_min + results.results[itemIndex].processing_max == null ? 0 : results.results[itemIndex].processing_max) / 2,
-        };
+        if (max_shipping_item_day != null) {
+
+          if (item.min_max_shipping_days != null) {
+            item.min_max_shipping_days = item.min_max_shipping_days+"-";
+          }
+          item.min_max_shipping_days = item.min_max_shipping_days+max_shipping_item_day;
+        }
 
         for (let i = 0; i < item.materials.length; i++) {
           if (!material_wise_items_map.has(item.materials[i].toLowerCase())) {
@@ -147,34 +254,34 @@ method.getListing = async function (searchKeyWord) {
           material_item.sum_of_prices += parseFloat(item.price);
         }
 
-        if (results.results[itemIndex].processing_min != null) {
-          if (!shipping_days_map.has(results.results[itemIndex].processing_min)) {
-            shipping_days_map.set(results.results[itemIndex].processing_min, 0);
-          }
-          if (shipping_day_prices.minimum_days == null || shipping_day_prices.minimum_days > results.results[itemIndex].processing_min) {
-            shipping_day_prices.minimum_days = results.results[itemIndex].processing_min;
-          }
-          shipping_days_count += 1;
-          let min_shipping_day = shipping_days_map.get(results.results[itemIndex].processing_min);
-          min_shipping_day += 1;
+        // if (results.results[itemIndex].processing_min != null) {
+        //   if (!shipping_days_map.has(results.results[itemIndex].processing_min)) {
+        //     shipping_days_map.set(results.results[itemIndex].processing_min, 0);
+        //   }
+        //   if (shipping_day_prices.minimum_days == null || shipping_day_prices.minimum_days > results.results[itemIndex].processing_min) {
+        //     shipping_day_prices.minimum_days = results.results[itemIndex].processing_min;
+        //   }
+        //   shipping_days_count += 1;
+        //   let min_shipping_day = shipping_days_map.get(results.results[itemIndex].processing_min);
+        //   min_shipping_day += 1;
 
-          shipping_days_map.set(results.results[itemIndex].processing_min, min_shipping_day);
-          sum_of_days += results.results[itemIndex].processing_min;
-        }
+        //   shipping_days_map.set(results.results[itemIndex].processing_min, min_shipping_day);
+        //   sum_of_days += results.results[itemIndex].processing_min;
+        // }
 
-        if (results.results[itemIndex].processing_max != null) {
-          if (!shipping_days_map.has(results.results[itemIndex].processing_max)) {
-            shipping_days_map.set(results.results[itemIndex].processing_max, 0);
-          }
+        // if (results.results[itemIndex].processing_max != null) {
+        //   if (!shipping_days_map.has(results.results[itemIndex].processing_max)) {
+        //     shipping_days_map.set(results.results[itemIndex].processing_max, 0);
+        //   }
 
-          let max_shipping_day = shipping_days_map.get(results.results[itemIndex].processing_max);
-          if (shipping_day_prices.maximum_days == null || shipping_day_prices.maximum_days < results.results[itemIndex].processing_max) {
-            shipping_day_prices.maximum_days = results.results[itemIndex].processing_max;
-          }
-          max_shipping_day += 1;
-          shipping_days_map.set(results.results[itemIndex].processing_max, max_shipping_day);
-          sum_of_days += results.results[itemIndex].processing_max;
-        }
+        //   let max_shipping_day = shipping_days_map.get(results.results[itemIndex].processing_max);
+        //   if (shipping_day_prices.maximum_days == null || shipping_day_prices.maximum_days < results.results[itemIndex].processing_max) {
+        //     shipping_day_prices.maximum_days = results.results[itemIndex].processing_max;
+        //   }
+        //   max_shipping_day += 1;
+        //   shipping_days_map.set(results.results[itemIndex].processing_max, max_shipping_day);
+        //   sum_of_days += results.results[itemIndex].processing_max;
+        // }
 
         for (let j = 0; j < item.tags.length; j++) {
           if (!popular_tags_map.has(item.tags[j].toLowerCase())) {
@@ -198,7 +305,9 @@ method.getListing = async function (searchKeyWord) {
           tag_properties.num_favorers += parseInt(item.num_favorers);
           favourites += parseInt(item.num_favorers);
           tag_properties.long_tail = item.tags[j].toLowerCase().indexOf(' ') >= 2;
-          tag_properties.days_to_ship = (results.results[itemIndex].processing_min == null ? 0 : results.results[itemIndex].processing_min + results.results[itemIndex].processing_max == null ? 0 : results.results[itemIndex].processing_max) / 2;
+          if (item.min_max_shipping_days != null) {
+            tag_properties.days_to_ship = item.min_max_shipping_days;
+          }
           popular_tags_map.set(item.tags[j].toLowerCase(), tag_properties);
           if (tag_properties.long_tail && item.tags[j].toLowerCase().includes(searchKeyWord.toLowerCase())) {
             long_tail_alternatives_map.set(item.tags[j].toLowerCase(), tag_properties);
@@ -251,7 +360,20 @@ method.getListing = async function (searchKeyWord) {
         similar_shopper_searches: similar_shopper_searches,
       };
 
+      await client.connect();
 
+      const database = client.db("etsy_database");
+
+      const doc = {
+        email: email,
+        keyword: searchKeyWord,
+        searches: result.searches,
+        competition: result.competition,
+        average_price: result.average_price,
+      };
+      const history = database.collection("user_history");
+  
+      const _response = await history.insertOne(doc);
       // console.log(shipping_day_prices);
       return result;
     }
@@ -259,8 +381,11 @@ method.getListing = async function (searchKeyWord) {
     else {
       return `Error in getting results received respose code: ${response.status} response description: ${response.statusText}`;
     }
+
   } catch (e) {
     console.log("Exception in calling getListing", e);
+  } finally{
+    await client.close();
   }
 };
 
