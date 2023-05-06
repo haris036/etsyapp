@@ -4,9 +4,12 @@ const fetch = require("node-fetch");
 const fs = require('fs');
 var http = require('http');
 const OAuth = require('oauth');
+const util = require('util');
 var nodeUrl = require('url');
+const sessions = require('express-session');
+const cookieParser = require('cookie-parser');
 // Create a new express application
-
+const auth = require('./middleware/auth');
 
 const app = express();
 const cors = require("cors");
@@ -28,64 +31,53 @@ var oa = new OAuth.OAuth(
   'HMAC-SHA1'
 );
 
-// This renders our `index.hbs` file.
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+//serving public file
+app.use(express.static(__dirname));
+
 app.get('/', async (req, res) => {
-  //res.send("<h1>Server is running</h1>")
-  oa.getOAuthRequestToken(function (error, oAuthToken, oAuthTokenSecret, results) {
-    console.log(oAuthToken);
-    console.log(oAuthTokenSecret);
-    console.log(results.login_url);
-    _OAuthToken = oAuthToken;
-    _OAuthTokenScret = oAuthTokenSecret;
 
-    // var urlObj = nodeUrl.parse(req.url, true);
-    var body = '<a href="' + results.login_url + '"> Get Code </a>';
-    res.writeHead(200, {
-      'Content-Length': body.length,
-      'Content-Type': 'text/html'
-    });
-    res.end(body);
-  });
-
+  res.send("<h1>Server is running</h1>")
 });
 
-app.get('/getListing/:keyword', async (req, res) => {
+app.get('/getListing/:keyword', 
+auth, 
+async (req, res) => {
   var Listing = require("./listing.js");
   var john = new Listing();
-  let response = await john.getListing(req.params.keyword);
+  //sleep(500);
+  let response = await john.getListing(req.params.keyword, req.user);
   res.end(JSON.stringify(response));
 });
 
-app.get('/getSingleListing/:listing_id', async (req, res) => {
-  var SingleListing = require("./single_listing.js");
-  var john = new SingleListing();
-  let response = await john.getSingleListing(req.params.listing_id);
+
+app.get('/getHistory', 
+auth, 
+async (req, res) => {
+  var Listing = require("./listing.js");
+  var john = new Listing();
+  //sleep(500);
+  let response = await john.getListing(req.params.keyword, req.user);
   res.end(JSON.stringify(response));
 });
 
-app.get('/calculateProfit', async (req, res) => {
-  var ProfitCalculator = require("./profit_calculator.js");
-  var john = new ProfitCalculator();
+app.get('/generateEmail', async (req, res) => {
+  var EmailHelper = require("./helper/email_helper.js");
+  var john = new EmailHelper();
+  // console.log(req.session);
   // console.log(req)
-  let response = john.calculateProfit(parseFloat(req.query.cust_price), parseFloat(req.query.cust_shipping_price),
-    parseFloat(req.query.cust_coupon), parseFloat(req.query.labor_cost), parseFloat(req.query.material_cost),
-    parseFloat(req.query.shipping_cost), parseFloat(req.query.etsy_ads), parseFloat(req.query.renewing),
-    parseFloat(req.query.offside_ads_fee_per));
+  let response = await john.generateEmail();
+  // console.log(response);
   res.end(JSON.stringify(response));
 });
 
 
-app.get('/calenderHolidays', async (req, res) => {
-  var CalenderHolidays = require("./calender_holiday.js");
-  var john = new CalenderHolidays();
-  // console.log(req)
-  let response = await john.getCalenderHolidays();
-  res.end(JSON.stringify(response));
-});
-
-+app.get('/signIn', async (req, res) => {
+app.get('/signIn', async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js");
   var john = new LoginOrSignUp();
+  // console.log(req.session);
   // console.log(req)
   let response = await john.getUser(req.query.email, req.query.password);
   // console.log(response);
@@ -93,12 +85,20 @@ app.get('/calenderHolidays', async (req, res) => {
 });
 
 
-app.get('/changePassword', async (req, res) => {
+app.get('/changePassword', auth, async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js");
   var john = new LoginOrSignUp();
   // console.log(req)
   let response = await john.updateUserPassword(req.query.email, req.query.password);
   res.end(JSON.stringify(response));
+});
+
+app.get('/updateProfile', auth, async (req, res) => {
+  var LoginOrSignUp = require("./login_or_signup.js")
+  var john = new LoginOrSignUp();
+
+  let response = await john.updateProfile(req.query.email, req.country, req.date_of_birth, req.contact_no);
+  res.end(JSON.stringify(response))
 });
 
 
@@ -110,7 +110,7 @@ app.get('/signUp', async (req, res) => {
   res.end(JSON.stringify(response));
 });
 
-app.get('/updateSubsciption', async (req, res) => {
+app.get('/updateSubsciption', auth, async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js");
   var john = new LoginOrSignUp();
   // console.log(req)
@@ -118,56 +118,35 @@ app.get('/updateSubsciption', async (req, res) => {
   res.end(JSON.stringify(response));
 });
 
+app.get('/getSingleListing/:listing_id', 
+ auth, 
+async (req, res) => {
+  var SingleListing = require("./single_listing.js");
+  // sleep(500);
+  var john = new SingleListing();
+  let response = await john.getSingleListing(req.params.listing_id);
+  res.end(JSON.stringify(response));
+});
 
-app.get('/callback', async (req, res) => {
-  console.log("Asd");
-  var urlObj = nodeUrl.parse(req.url, true);
-  var getOAuthRequestTokenCallback = function (error, oAuthAccessToken,
-    oAuthAccessTokenSecret, results) {
-    if (error) {
-      console.log(error);
-      res.end(JSON.stringify({
-        message: 'Error occured while getting access token',
-        error: error
-      }));
-      return;
-    }
-    console.log(oAuthAccessToken);
-    console.log(oAuthAccessTokenSecret);
-    console.log(results)
-    oa.get("https://openapi.etsy.com/v2/users/__SELF__",
-      oAuthAccessToken,
-      oAuthAccessTokenSecret,
-      function (error, twitterResponseData, result) {
-        if (error) {
-          console.log(error)
-          res.end(JSON.stringify(error));
-          return;
-        }
-        try {
-          console.log(JSON.parse(twitterResponseData));
-          // console.log(result);
-        } catch (parseError) {
-          console.log(parseError);
-        }
-        console.log(twitterResponseData);
-        fs.appendFile('access_token.txt', twitterResponseData + " \n" + oAuthAccessToken + " \n" + oAuthAccessTokenSecret + "\n", function (err) {
-          if (err) throw err;
-          console.log('Saved!');
-        });
-        res.end(twitterResponseData);
-      });
-  };
-  console.log(urlObj.query);
-  console.log(urlObj.query.oauth_token)
-  let response = oa.getOAuthAccessToken(urlObj.query.oauth_token, _OAuthTokenScret,
-    urlObj.query.oauth_verifier,
-    getOAuthRequestTokenCallback);
-  Promise.resolve(response);
-  fs.appendFile('access_token.txt', response + "  yo\n ", function (err) {
-    if (err) throw err;
-    console.log('Saved!');
-  });
+
+app.get('/calculateProfit', auth, async (req, res) => {
+  var ProfitCalculator = require("./profit_calculator.js");
+  var john = new ProfitCalculator();
+  // console.log(req)
+  let response = john.calculateProfit(parseFloat(req.query.cust_price), parseFloat(req.query.cust_shipping_price),
+    parseFloat(req.query.cust_coupon), parseFloat(req.query.labor_cost), parseFloat(req.query.material_cost),
+    parseFloat(req.query.shipping_cost), parseFloat(req.query.etsy_ads), parseFloat(req.query.renewing),
+    parseFloat(req.query.offside_ads_fee_per));
+  res.end(JSON.stringify(response));
+});
+
+
+app.get('/calenderHolidays', auth, async (req, res) => {
+  var CalenderHolidays = require("./calender_holiday.js");
+  var john = new CalenderHolidays();
+  // console.log(req)
+  let response = await john.getCalenderHolidays();
+  res.end(JSON.stringify(response));
 });
 
 app.get('/paymentProcess', async (req, res) => {
@@ -178,6 +157,33 @@ app.get('/paymentProcess', async (req, res) => {
   res.end(JSON.stringify(response));
 });
 
+//REFRESH TOKEN API
+app.post("/refreshToken", auth, (req, res) => {
+  
+    // res.status(400).send("Refresh Token Invalid")
+    //refreshTokens = refreshTokens.filter((c) => c != req.body.token)
+  //remove the old refreshToken from the refreshTokens list
+  const accessToken = generateAccessToken({ user: req.body.name })
+  const refreshToken = generateRefreshToken({ user: req.body.name })
+  //generate new accessToken and 
+  res.json({ accessToken: accessToken, refreshToken: refreshToken })
+})
+
+app.get('/forgotPassword', async (req, res) => {
+  var LoginOrSignUp = require("./login_or_signup.js");
+  var john = new LoginOrSignUp();
+  // console.log(req)
+  let response = await john.forgotPassword(req.query.email);
+  res.end(JSON.stringify(response));
+});
+
+app.post("/deleteAccount", auth, (req, res) => {
+  var LoginOrSignUp = require("./login_or_signup.js");
+  var john = new LoginOrSignUp();
+  // console.log(req)
+  let response =  john.deleteAccount(req.query.email,);
+  res.end(JSON.stringify(response));
+})
 
 // app.get('/callbackUrl', async (req, res) => {
 //   console.log("request: "+ JSON.stringify(req));
