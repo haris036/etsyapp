@@ -128,9 +128,10 @@ method.getUser = async function (_email, _password) {
 
     const database = client.db("etsy_database");
     const users = database.collection("user_data");
+    console.log(_email);
     const user_data = await users.findOne({ email: _email });
     let response;
-    // console.log(user_data)
+    console.log(user_data)
     var tokenGenerator = new GenerateToken();
     if (user_data.password == _password) {
       response = tokenGenerator.getToken(_email);
