@@ -1,7 +1,18 @@
 const axios = require('axios');
 const qs = require('qs');
 const { MongoClient } = require("mongodb");
+const username = encodeURIComponent("harisarif103");
+
+const password = encodeURIComponent("Temp.123");
+
+const cluster = "mycluster.u9r3f1e.mongodb.net";
+
+let uri =
+
+  `mongodb+srv://${username}:${password}@${cluster}/?retryWrites=true&w=majority`;
+// authSource=${authSource}&authMechanism=${authMechanism}
 const client = new MongoClient(uri);
+
 const access_token = '8966655804195cffb113';
 
 var method = History.prototype;

@@ -3,6 +3,21 @@ const fs = require('fs');
 const Listing = require("./listing.js");
 let api_key_info = JSON.parse(fs.readFileSync("api_key.json"));
 var myHeaders = new fetch.Headers();
+
+// const { MongoClient } = require("mongodb");
+// const username = encodeURIComponent("harisarif103");
+
+// const password = encodeURIComponent("Temp.123");
+
+// const cluster = "mycluster.u9r3f1e.mongodb.net";
+
+// let uri =
+
+//   `mongodb+srv://${username}:${password}@${cluster}/?retryWrites=true&w=majority`;
+// // authSource=${authSource}&authMechanism=${authMechanism}
+
+// const client = new MongoClient(uri);
+
 myHeaders.append("x-api-key", "7vudmbql4ympd8mrzsajli9n");
 var method = SingleListing.prototype;
 function SingleListing() { }
@@ -64,10 +79,10 @@ method.getSingleListing = async function (listing_id) {
             
             shipping_infos.push(shipping_info);
         }
-
+        let is_single_listing = true;
         for (let j = 0; j < result.tags.length; j++) {
             // sleep(300);
-            tags_call.push( listings.getListing( result.tags[j]).then(response => {
+            tags_call.push( listings.getListing( result.tags[j], null, is_single_listing).then(response => {
                 // console.log(response);
                 let  tag_properties = {
                     name: result.tags[j],

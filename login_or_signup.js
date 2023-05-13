@@ -130,8 +130,9 @@ method.getUser = async function (_email, _password) {
     const users = database.collection("user_data");
     const user_data = await users.findOne({ email: _email });
     let response;
+    // console.log(user_data)
     var tokenGenerator = new GenerateToken();
-    if (user_data[0].password == _password) {
+    if (user_data.password == _password) {
       response = tokenGenerator.getToken(_email);
     }
 
@@ -153,7 +154,7 @@ method.getUser = async function (_email, _password) {
   return user_info;
 }
 
-method.updateProfile = async function (_email, _country, _date_of_birth, _contact_no) {
+method.updateCountry = async function (_email, _country, ) {
 
   try {
 
@@ -164,7 +165,61 @@ method.updateProfile = async function (_email, _country, _date_of_birth, _contac
     var newvalues = {
       $set: {
         country: _country,
+        last_updated: Date.now()
+      }
+    };
+    await dbo.collection("user_data").updateOne(myquery, newvalues);
+
+  } catch (e) {
+    return e
+  } finally {
+
+    await client.close();
+
+  }
+
+  return user_info;
+}
+
+
+method.updateDateOfBirth = async function (_email, _date_of_birth) {
+
+  try {
+
+    await client.connect();
+
+    var dbo = client.db("etsy_database");
+    var myquery = { email: _email };
+    var newvalues = {
+      $set: {
         date_of_birth: _date_of_birth,
+        last_updated: Date.now()
+      }
+    };
+    await dbo.collection("user_data").updateOne(myquery, newvalues);
+
+  } catch (e) {
+    return e
+  } finally {
+
+    await client.close();
+
+  }
+
+  return user_info;
+}
+
+
+method.updateContactNo = async function (_email, _contact_no) {
+
+  try {
+
+    await client.connect();
+
+    var dbo = client.db("etsy_database");
+    var myquery = { email: _email };
+    var newvalues = {
+      $set: {
         contact_no: _contact_no,
         last_updated: Date.now()
       }

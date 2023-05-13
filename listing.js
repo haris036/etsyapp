@@ -3,6 +3,17 @@ const fs = require('fs');
 const History = require("./history.js");
 let api_key_info = JSON.parse(fs.readFileSync("api_key.json"));
 const { MongoClient } = require("mongodb");
+const username = encodeURIComponent("harisarif103");
+
+const password = encodeURIComponent("Temp.123");
+
+const cluster = "mycluster.u9r3f1e.mongodb.net";
+
+let uri =
+
+  `mongodb+srv://${username}:${password}@${cluster}/?retryWrites=true&w=majority`;
+// authSource=${authSource}&authMechanism=${authMechanism}
+
 const client = new MongoClient(uri);
 var method = Listing.prototype;
 function Listing() { }
@@ -14,7 +25,7 @@ var requestOptions = {
   redirect: 'follow'
 };
 
-method.getListing = async function (searchKeyWord, email) {
+method.getListing = async function (searchKeyWord, email, is_single_listing) {
   var items = [];
   var trends = [];
 
@@ -32,7 +43,7 @@ method.getListing = async function (searchKeyWord, email) {
 
   );
 
-
+  console.log(is_single_listing)
   try {
     var history = new History();
     var historical_metrices;
@@ -72,7 +83,7 @@ method.getListing = async function (searchKeyWord, email) {
     else {
       return `Error in getting results received respose code: ${response.status} response description: ${response.statusText}`;
     }
-    console.log(listing_ids);
+    // console.log(listing_ids);
     const urlBatchListingIds = (
       'https://openapi.etsy.com/v3/application/listings/batch?' +
       new URLSearchParams({
@@ -82,7 +93,7 @@ method.getListing = async function (searchKeyWord, email) {
       }).toString()
 
     );
-    console.log(urlBatchListingIds)
+    // console.log(urlBatchListingIds)
     response = await fetch(urlBatchListingIds, requestOptions);
     results = await response.json();
 
@@ -193,7 +204,7 @@ method.getListing = async function (searchKeyWord, email) {
             max_shipping_day += 1;
             shipping_days_map.set(shipping_profile_destinations.max_delivery_days, max_shipping_day);
             sum_of_days += shipping_profile_destinations.max_delivery_days;
-            item_shipping_days_count += 1;
+            // item_shipping_days_count += 1;
           }
         }
         // console.log("avg_days_to_ship: " + avg_days_to_ship);
@@ -227,9 +238,9 @@ method.getListing = async function (searchKeyWord, email) {
         if (max_shipping_item_day != null) {
 
           if (item.min_max_shipping_days != null) {
-            item.min_max_shipping_days = item.min_max_shipping_days+"-";
+            item.min_max_shipping_days = item.min_max_shipping_days + "-";
           }
-          item.min_max_shipping_days = item.min_max_shipping_days+max_shipping_item_day;
+          item.min_max_shipping_days = item.min_max_shipping_days + max_shipping_item_day;
         }
 
         for (let i = 0; i < item.materials.length; i++) {
@@ -359,21 +370,24 @@ method.getListing = async function (searchKeyWord, email) {
         average_price: average_price / length,
         similar_shopper_searches: similar_shopper_searches,
       };
+      
+      if (!is_single_listing) {
+        await client.connect();
 
-      await client.connect();
+        const database = client.db("etsy_database");
 
-      const database = client.db("etsy_database");
+        const doc = {
+          email: email.user,
+          keyword: searchKeyWord,
+          searches: result.searches,
+          competition: result.competition,
+          average_price: result.average_price,
+          search_time: Date.now(),
+        };
+        const history = database.collection("user_history");
 
-      const doc = {
-        email: email,
-        keyword: searchKeyWord,
-        searches: result.searches,
-        competition: result.competition,
-        average_price: result.average_price,
-      };
-      const history = database.collection("user_history");
-  
-      const _response = await history.insertOne(doc);
+        const _response = await history.insertOne(doc);
+      }
       // console.log(shipping_day_prices);
       return result;
     }
@@ -384,8 +398,10 @@ method.getListing = async function (searchKeyWord, email) {
 
   } catch (e) {
     console.log("Exception in calling getListing", e);
-  } finally{
-    await client.close();
+  } finally {
+    if (!is_single_listing) {
+      await client.close();
+    }
   }
 };
 
