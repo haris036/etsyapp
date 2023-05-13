@@ -19,17 +19,17 @@ const corsOptions = {
   optionSuccessStatus: 200,
 }
 app.use(cors(corsOptions));
-var _OAuthToken = "";
-var _OAuthTokenScret = "";
-var oa = new OAuth.OAuth(
-  'https://openapi.etsy.com/v2/oauth/request_token?scope=email_r%20listings_r',
-  'https://openapi.etsy.com/v2/oauth/access_token',
-  '7vudmbql4ympd8mrzsajli9n',
-  'wqbda069fr',
-  '1.0A',
-  "http://localhost:5000/callback",
-  'HMAC-SHA1'
-);
+// // var _OAuthToken = "";
+// // var _OAuthTokenScret = "";
+// var oa = new OAuth.OAuth(
+//   'https://openapi.etsy.com/v2/oauth/request_token?scope=email_r%20listings_r',
+//   'https://openapi.etsy.com/v2/oauth/access_token',
+//   '7vudmbql4ympd8mrzsajli9n',
+//   'wqbda069fr',
+//   '1.0A',
+//   "http://localhost:5000/callback",
+//   'HMAC-SHA1'
+// );
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -48,7 +48,8 @@ async (req, res) => {
   var Listing = require("./listing.js");
   var john = new Listing();
   //sleep(500);
-  let response = await john.getListing(req.params.keyword, req.user);
+  let is_single_listing = false;
+  let response = await john.getListing(req.params.keyword, req.user, is_single_listing);
   res.end(JSON.stringify(response));
 });
 
@@ -93,14 +94,29 @@ app.get('/changePassword', auth, async (req, res) => {
   res.end(JSON.stringify(response));
 });
 
-app.get('/updateProfile', auth, async (req, res) => {
+app.get('/updateCountry', auth, async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js")
   var john = new LoginOrSignUp();
 
-  let response = await john.updateProfile(req.query.email, req.country, req.date_of_birth, req.contact_no);
+  let response = await john.updateProfile(req.query.email, req.country);
   res.end(JSON.stringify(response))
 });
 
+app.get('/updateDateOfBirth', auth, async (req, res) => {
+  var LoginOrSignUp = require("./login_or_signup.js")
+  var john = new LoginOrSignUp();
+
+  let response = await john.updateProfile(req.query.email, req.date_of_birth);
+  res.end(JSON.stringify(response))
+});
+
+app.get('/updateContactNo', auth, async (req, res) => {
+  var LoginOrSignUp = require("./login_or_signup.js")
+  var john = new LoginOrSignUp();
+
+  let response = await john.updateProfile(req.query.email, req.contact_no);
+  res.end(JSON.stringify(response))
+});
 
 app.get('/signUp', async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js");
