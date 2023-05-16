@@ -37,61 +37,48 @@ method.getHistoricalMetrices = async function (searchKeyWord) {
         'Authorization': `Bearer ${access_token}`
       }
     })
-    .then(response =>response.data)
+    .then(response => response.data)
     .catch(error => {
       console.error(error);
     });
-    
+
 }
 
-method.getHistory = async function(email)  {
-
-  let user_history_ = [];
+method.getHistory = async function (email) {
+  console.log(email)
+  let user_histories = [];
   try {
 
     await client.connect();
 
     const database = client.db("etsy_database");
     const users = database.collection("user_history");
-    const user_history = await users.find({ email: email });
+    const user_history_data = await users.find({ email: email });
     
-    const results = user_history.forEach(function(err, doc){
-      if (doc){
-        user_history_.push (
+    await user_history_data.forEach(doc => {
+      // console.log("rrrr")
+      if (doc) {
+        user_histories.push(
           {
-             history :{
-              
-              keyword : user_history.keyword,
-              searches: user_history.searches,
-              average_price: user_history.average_price,
-              competition: user_history.competition,
-
+            history: {
+              keyword: doc.keyword,
+              searches: doc.searches,
+              average_price: doc.average_price,
+              competition: doc.competition,
+              search_time: doc.search_time,
             },
           }
-          
         )
-      } else {
-        return err;
       }
     })
-    var tokenGenerator = new GenerateToken();
-    if (user_data[0].password == _password) {
-      response = tokenGenerator.getToken(_email);
-    }
-
-    user_info = {
-      email: user_data.email,
-      access_token: response.access_token,
-      refresh_token: response.refresh_token,
-    }
-    console.log(user_info)
+    // console.log(user_histories)
+    return user_histories
   } catch (e) {
     console.log(e)
     return e
   } finally {
-
+    console.log("error")
     await client.close();
-
   }
 }
 module.exports = History;

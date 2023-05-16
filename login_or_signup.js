@@ -128,11 +128,13 @@ method.getUser = async function (_email, _password) {
 
     const database = client.db("etsy_database");
     const users = database.collection("user_data");
-    console.log(_email);
     const user_data = await users.findOne({ email: _email });
     let response;
-    console.log(user_data)
+    // console.log(user_data)
     var tokenGenerator = new GenerateToken();
+    if (user_data == null) {
+      return "No user found";
+    }
     if (user_data.password == _password) {
       response = tokenGenerator.getToken(_email);
     }
@@ -255,7 +257,7 @@ method.deleteAccount = async function (_email,) {
     await client.close();
   }
   let response = {
-    msg: "Updated",
+    msg: "Deleted",
   }
   return response;
 }
@@ -270,12 +272,15 @@ method.forgotPassword = async function (_email,) {
     const database = client.db("etsy_database");
     const users = database.collection("user_data");
     const user_data = await users.findOne({ email: _email });
+    if (user_data == null) {
+      return "No user found";
+    }
     var tokenGenerator = new GenerateToken();
     let response = tokenGenerator.getResetPasswordToken(_email);
     user_info = {
       access_token: response.access_token,
     }
-    console.log(user_info)
+    // console.log(user_info)
     var EmailHelper = require("./helper/email_helper.js");
     var john = new EmailHelper();
     // console.log(req.session);
