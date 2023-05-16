@@ -57,10 +57,10 @@ async (req, res) => {
 app.get('/getHistory', 
 auth, 
 async (req, res) => {
-  var Listing = require("./listing.js");
-  var john = new Listing();
+  var History = require("./history.js");
+  var john = new History();
   //sleep(500);
-  let response = await john.getListing(req.params.keyword, req.user);
+  let response = await john.getHistory(req.user.user);
   res.end(JSON.stringify(response));
 });
 
