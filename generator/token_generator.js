@@ -17,7 +17,6 @@ method.getToken =  function (user_id) {
 }
 
 method.getResetPasswordToken =  function (user_id) {
-    console.log(user_id)
     let response = {
         access_token: generateAccessToken(user_id, "60m"),
     };

@@ -46,10 +46,18 @@ method.saveUser = async function (_email, _password, _is_subscribed) {
     insert_id = result.insertedId;
   } catch (e) {
     if (e.code === 11000) {
-      return "User already exists with same email id"
+      let response = {
+        status: 110,
+        error_msg: "User already exists with same email id",
+      }
+      return response;
     }
     else {
-      return (e)
+      let response = {
+        status: 500,
+        error_msg: e,
+      }
+      return response;
     }
   } finally {
 
@@ -57,6 +65,7 @@ method.saveUser = async function (_email, _password, _is_subscribed) {
 
   }
   let response = {
+    status: 200,
     user: usr,
     inserted_id: insert_id,
   }
@@ -80,11 +89,16 @@ method.updateUserPassword = async function (_email, _password) {
     await dbo.collection("user_data").updateOne(myquery, newvalues);
 
   } catch (e) {
-    return e
+    let response = {
+      status: 500,
+      error_msg: e,
+    }
+    return response;
   } finally {
     await client.close();
   }
   let response = {
+    status: 200,
     msg: "Updated",
   }
   return response;
@@ -106,13 +120,18 @@ method.updateSubscription = async function (_email, _is_subscribed) {
     };
     await dbo.collection("user_data").updateOne(myquery, newvalues);
   } catch (e) {
-    return e
+    let response = {
+      status: 500,
+      error_msg: e,
+    }
+    return response;
   } finally {
 
     await client.close();
 
   }
   let response = {
+    status: 200,
     msg: "Updated",
   }
   return response;
@@ -133,7 +152,10 @@ method.getUser = async function (_email, _password) {
     // console.log(user_data)
     var tokenGenerator = new GenerateToken();
     if (user_data == null) {
-      return "No user found";
+      return response = {
+        status: 500,
+        error_msg: "no user found",
+      }
     }
     if (user_data.password == _password) {
       response = tokenGenerator.getToken(_email);
@@ -146,15 +168,22 @@ method.getUser = async function (_email, _password) {
     }
     console.log(user_info)
   } catch (e) {
-    console.log(e)
-    return e
+    let response = {
+      status: 500,
+      error_msg: e,
+    }
+    return response;
+    
   } finally {
 
     await client.close();
 
   }
-
-  return user_info;
+  let response = {
+    status: 200,
+    user_info: user_info,
+  }
+  return response;
 }
 
 method.updateCountry = async function (_email, _country, ) {
@@ -174,14 +203,21 @@ method.updateCountry = async function (_email, _country, ) {
     await dbo.collection("user_data").updateOne(myquery, newvalues);
 
   } catch (e) {
-    return e
+    let response = {
+      status: 500,
+      error_msg: e,
+    }
+    return response;
   } finally {
 
     await client.close();
 
   }
-
-  return user_info;
+  let response = {
+    status: 200,
+    msg: "country updated",
+  }
+  return response;
 }
 
 
@@ -202,14 +238,23 @@ method.updateDateOfBirth = async function (_email, _date_of_birth) {
     await dbo.collection("user_data").updateOne(myquery, newvalues);
 
   } catch (e) {
-    return e
+    let response = {
+      status: 500,
+      error_msg: e,
+    }
+    return response;
   } finally {
 
     await client.close();
 
   }
 
-  return user_info;
+  let response = {
+    status: 200,
+    msg: "date of birth updated",
+  }
+
+  return response;
 }
 
 
@@ -230,14 +275,23 @@ method.updateContactNo = async function (_email, _contact_no) {
     await dbo.collection("user_data").updateOne(myquery, newvalues);
 
   } catch (e) {
-    return e
+    let response = {
+      status: 500,
+      error_msg: e,
+    }
+    return response;
   } finally {
 
     await client.close();
 
   }
+  
+  let response = {
+    status: 200,
+    msg: "contact no updated",
+  }
 
-  return user_info;
+  return response;
 }
 
 method.deleteAccount = async function (_email,) {
@@ -252,12 +306,18 @@ method.deleteAccount = async function (_email,) {
 
 
   } catch (e) {
-    return e
+    let response = {
+      status: 500,
+      error_msg: e,
+    }
+    return response;
   } finally {
     await client.close();
   }
+  
   let response = {
-    msg: "Deleted",
+    status: 200,
+    msg: "deleted",
   }
   return response;
 }
@@ -294,16 +354,19 @@ method.forgotPassword = async function (_email,) {
     };
     const tokens = database.collection("user_tokens");
 
-    const result = await tokens.replaceOne(doc);
+    await tokens.replaceOne(doc);
 
-
-    // console.log(response);
   } catch (e) {
-    return e
+    let response = {
+      status: 500,
+      error_msg: e,
+    }
+    return response;
   } finally {
     await client.close();
   }
   let response = {
+    status: 200,
     msg: "email generated",
   }
   return response;

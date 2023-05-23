@@ -353,6 +353,7 @@ method.getListing = async function (searchKeyWord, email, is_single_listing) {
       let material_items = Array.from(material_wise_items_map);
       let similar_shopper_searches = Array.from(similar_shopper_searches_map.entries());
       let result = {
+        status: 200,
         items: items,
         popular_tags: popular_tags,
         item_pricing: Array.from(item_pricing.entries()),
@@ -388,16 +389,29 @@ method.getListing = async function (searchKeyWord, email, is_single_listing) {
 
         const _response = await history.insertOne(doc);
       }
+      let response = {
+        status: 200,
+        result: result,
+      }
       // console.log(shipping_day_prices);
-      return result;
+      return response;
     }
 
     else {
-      return `Error in getting results received respose code: ${response.status} response description: ${response.statusText}`;
+      let response = {
+        status: 500,
+        error_msg: `Error in getting results received respose code: ${response.status} response description: ${response.statusText}`,
+      }      
+      return response;
     }
 
   } catch (e) {
-    console.log("Exception in calling getListing", e);
+    
+    let response = {
+      status: 500,
+      error_msg: e,
+    }
+    return response;
   } finally {
     if (!is_single_listing) {
       await client.close();

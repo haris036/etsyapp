@@ -137,6 +137,7 @@ method.getSingleListing = async function (listing_id) {
         
 
         let response = {
+            status: 200,
            item_data: item,
         };
         // console.log(shipping_day_prices);
@@ -145,7 +146,12 @@ method.getSingleListing = async function (listing_id) {
 
 
     } else {
-        return `Error in getting results received respose code: ${response.status} response description: ${response.statusText}`;
+        let response = {
+            status: 200,
+           error_msg: `Error in getting results received respose code: ${response.status} response description: ${response.statusText}`,
+        };
+        // console.log(shipping_day_prices);
+        return response;
     }
 }
 

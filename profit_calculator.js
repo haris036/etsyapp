@@ -13,6 +13,7 @@ method.calculateProfit = function (custPrice, custShippingPrice, custCoupon, lab
     let estimated_profit = (discounted_price == 0 ? cust_price : discounted_price) - total_fees - total_cost;
     let estimated_margin = estimated_profit / (discounted_price == 0 ? cust_price : discounted_price) * 100;
     let result = {
+        status: 200,
         cust_price: cust_price,
         discounted_price: discounted_price,
         total_cost: total_cost,

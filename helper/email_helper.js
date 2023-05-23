@@ -5,10 +5,10 @@ var method = EmailHelper.prototype;
 function EmailHelper() { }
 var nodemailer = require('nodemailer');
 
-method.generateEmail = async function (email_to, _text, _html, _subject) {
+method.generateEmail = async function (email, _text, _html, _subject) {
     var mailOptions = {
-        from: 'haris.arif103@gmail.com',
-        to: email_to,
+        from: email,
+        to: 'support@eprimedata.com',
         text: _text,
         html: _html,
     };

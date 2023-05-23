@@ -28,19 +28,29 @@ let payload = {
 
 function History() { }
 method.getHistoricalMetrices = async function (searchKeyWord) {
-  payload.kw.push(searchKeyWord);
-  return axios.post('https://api.keywordseverywhere.com/v1/get_keyword_data',
-    qs.stringify(payload),
-    {
-      headers: {
-        'Accept': 'application/json',
-        'Authorization': `Bearer ${access_token}`
-      }
-    })
-    .then(response => response.data)
-    .catch(error => {
-      console.error(error);
-    });
+  try {
+    payload.kw.push(searchKeyWord);
+    return axios.post('https://api.keywordseverywhere.com/v1/get_keyword_data',
+      qs.stringify(payload),
+      {
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${access_token}`
+        }
+      })
+      .then(response => response.data)
+      .catch(error => {
+        return response = {
+          status: 500,
+          error_msg: error,
+        }
+      });
+  } catch (e) {
+    return response = {
+      status: 500,
+      error_msg: e,
+    }
+  }
 
 }
 
@@ -54,7 +64,7 @@ method.getHistory = async function (email) {
     const database = client.db("etsy_database");
     const users = database.collection("user_history");
     const user_history_data = await users.find({ email: email });
-    
+
     await user_history_data.forEach(doc => {
       // console.log("rrrr")
       if (doc) {
@@ -71,13 +81,17 @@ method.getHistory = async function (email) {
         )
       }
     })
-    // console.log(user_histories)
-    return user_histories
+    let response = {
+      status: 200,
+      user_histories: user_histories,
+    }
+    return response;
   } catch (e) {
-    console.log(e)
-    return e
+    return response = {
+      status: 500,
+      error_msg: e,
+    }
   } finally {
-    console.log("error")
     await client.close();
   }
 }
