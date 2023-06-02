@@ -9,7 +9,7 @@ method.generateEmail = async function (email, _text, _html, _subject) {
     var mailOptions = {
         from: email,
         to: 'support@eprimedata.com',
-        text: _text,
+        text: "you get an email",
         html: _html,
     };
 
@@ -25,7 +25,7 @@ method.generateEmail = async function (email, _text, _html, _subject) {
         },
         debug: true
     });
-    console.log("sent")
+    
      await smtpTransporter.sendMail(mailOptions, (error, info) => {
         if (error) {
             console.log(error);
@@ -35,12 +35,12 @@ method.generateEmail = async function (email, _text, _html, _subject) {
             // res.status(200).send(info);
         }
     });
-    console.log("sent")
+    
 }
 
 method.resetPasswordEmail = async function (email_to, _text, _html,) {
     var mailOptions = {
-        from: 'no-reply@eprimedata.com',
+        from: 'haris.arif103@gmail.com',
         to: email_to,
         text: _text,
         html: _html,
@@ -49,14 +49,13 @@ method.resetPasswordEmail = async function (email_to, _text, _html,) {
     // Send e-mail using SMTP
     mailOptions.subject = 'reset password request';
     var smtpTransporter = nodemailer.createTransport({
-        port: 25,
-        host: "email-smtp.ap-northeast-1.amazonaws.com",
+        service: "Gmail",
         secure: true,
         auth: {
-            user: "AKIAU733B6VZPXAE2Q3A",
-            pass: "BAzP8hTunpkHnX2OQDMtxrvGt9Hq1wf3fZ3UaI04RFsv",
+            user: "haris.arif103@gmail.com",
+            pass: "opvodugvegommezb",
         },
-        debug: true
+        // debug: true
     });
     console.log("sent")
      await smtpTransporter.sendMail(mailOptions, (error, info) => {
