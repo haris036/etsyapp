@@ -153,7 +153,7 @@ method.getUser = async function (_email, _password) {
     var tokenGenerator = new GenerateToken();
     if (user_data == null) {
       return response = {
-        status: 500,
+        status: 404,
         error_msg: "no user found",
       }
     }
@@ -182,6 +182,64 @@ method.getUser = async function (_email, _password) {
   let response = {
     status: 200,
     user_info: user_info,
+  }
+  return response;
+}
+
+method.getUserProfile = async function (_email,) {
+
+  let user_data;
+  try {
+
+    await client.connect();
+
+    const database = client.db("etsy_database");
+    const users = database.collection("user_data");
+    user_data = await users.findOne({ email: _email });
+  } catch (e) {
+    let response = {
+      status: 500,
+      error_msg: e,
+    }
+    return response;
+    
+  } finally {
+
+    await client.close();
+
+  }
+  let response = {
+    status: 200,
+    user_info: user_data,
+  }
+  return response;
+}
+
+method.getUserProfile = async function (_email,) {
+
+  let user_data;
+  try {
+
+    await client.connect();
+
+    const database = client.db("etsy_database");
+    const images = database.collection("image_storage");
+    image_data = await images.findOne({ email: _email });
+  } catch (e) {
+    let response = {
+      status: 500,
+      error_msg: e,
+    }
+    return response;
+    
+  } finally {
+
+    await client.close();
+
+  }
+  let response = {
+    status: 200,
+    image_data: image_data,
   }
   return response;
 }
@@ -294,6 +352,97 @@ method.updateContactNo = async function (_email, _contact_no) {
   return response;
 }
 
+method.save_image = async function (_email, _image) {
+  if (!_image){
+    return response = {
+      status: 200,
+      msg: "image_uploaded",
+    };
+  }
+  try {
+    
+    await client.connect();
+    // console.log(JSON.stringify(update))
+    // var updateJson = JSON.stringify({update});
+    var dbo = client.db("etsy_database");
+    var query = { email: _email };
+    var doc = {
+      email: _email,
+      image_name: _image.name,
+      image_desc: _image.desc,
+      data: _image.img.data,
+    };
+    await dbo.collection("image_storage").replaceOne(query, doc,{ upsert: true});
+  } catch (e) {
+    console.log(e)
+    let response = {
+      status: 500,
+      error_msg: e,
+    }
+    return response;
+  } finally {
+
+    await client.close();
+
+  }
+  
+  let response = {
+    status: 200,
+    msg: "image_uploaded",
+  }
+
+  return response;
+}
+
+
+
+method.updateProfile = async function (_email, _date_of_birth, _country, _contact_no, image) {
+
+  try {
+
+    await client.connect();
+    // console.log(JSON.stringify(update))
+    // var updateJson = JSON.stringify({update});
+    var dbo = client.db("etsy_database");
+    var myquery = { email: _email };
+    var updateQuery = {
+      $set: {
+      }
+    };
+    if (_date_of_birth)
+      updateQuery.$set['date_of_birth'] = _date_of_birth;
+    if (_country)
+      updateQuery.$set['country'] = _country;
+    if (_contact_no)  
+      updateQuery.$set['contact_no'] = _contact_no;
+    if (_image)
+      
+      console.log(updateQuery);
+
+    await dbo.collection("user_data").updateOne(myquery, updateQuery,);
+
+  } catch (e) {
+    console.log(e)
+    let response = {
+      status: 500,
+      error_msg: e,
+    }
+    return response;
+  } finally {
+
+    await client.close();
+
+  }
+  
+  let response = {
+    status: 200,
+    msg: "contact no updated",
+  }
+
+  return response;
+}
+
+
 method.deleteAccount = async function (_email,) {
 
   try {
@@ -345,18 +494,23 @@ method.forgotPassword = async function (_email,) {
     var john = new EmailHelper();
     // console.log(req.session);
     // console.log(req)
-    response = await john.resetPasswordEmail(_email, user_info.access_token, user_info.access_token);
-
-    const doc = {
+    let link = "https://eprimedata.com/reset-password?token="+encodeURIComponent(user_info.access_token);
+    console.log(link)
+    response = await john.resetPasswordEmail(_email, link);
+    var query ={
+      email: _email,
+    }
+    var doc = {
       email: _email,
       reset_password: user_info.access_token,
-      upsert: true,
+      
     };
     const tokens = database.collection("user_tokens");
 
-    await tokens.replaceOne(doc);
+    await tokens.replaceOne(query, doc,{ upsert: true});
 
   } catch (e) {
+    console.log(e)
     let response = {
       status: 500,
       error_msg: e,
