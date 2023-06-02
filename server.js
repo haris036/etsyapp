@@ -14,7 +14,18 @@ const authRefreshToken = require('./middleware/auth_refresh_token');
 const GenerateToken = require("./generator/token_generator")
 const app = express();
 const cors = require("cors");
-
+var multer = require('multer');
+ 
+var storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, './images')
+    },
+    filename: (req, file, cb) => {
+        cb(null, file.fieldname + '-' + Date.now())
+    }
+});
+ 
+var upload = multer({ storage: storage });
 const corsOptions = {
   origin: '*',
   optionSuccessStatus: 200,
@@ -43,9 +54,7 @@ app.get('/', async (req, res) => {
   res.send("<h1>Server is running</h1>")
 });
 
-app.get('/getListing/:keyword', 
-auth, 
-async (req, res) => {
+app.get('/getListing/:keyword', auth, async (req, res) => {
   var Listing = require("./listing.js");
   var john = new Listing();
   //sleep(500);
@@ -55,13 +64,23 @@ async (req, res) => {
 });
 
 
-app.get('/getHistory', 
-auth, 
-async (req, res) => {
+app.get('/getHistory', auth, async (req, res) => {
   var History = require("./history.js");
   var john = new History();
   //sleep(500);
   let response = await john.getHistory(req.user.user);
+  res.status(response.status).end(JSON.stringify(response));
+});
+
+app.get('/getProfile', auth, async (req, res) => {
+  var LoginOrSignUp = require("./login_or_signup.js");
+  var john = new LoginOrSignUp();
+  let response = await john.getUser(req.user.user,);
+  let img_response = await john.getImage(req.user.user);
+  // let image_data;
+  if (img_response.status == 200) {
+    response['image_data'] = img_response.image_data;
+  }
   res.status(response.status).end(JSON.stringify(response));
 });
 
@@ -79,16 +98,13 @@ app.get('/generateEmail', auth, async (req, res) => {
 app.get('/signIn', async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js");
   var john = new LoginOrSignUp();
-  // console.log(req.session);
-  // console.log(req)
   let response = await john.getUser(req.query.email, req.query.password);
-  // console.log(response);
   console.log(response)
   res.status(response.status).end(JSON.stringify(response));
 });
 
 
-app.get('/changePassword', auth, async (req, res) => {
+app.post('/changePassword', auth, async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js");
   var john = new LoginOrSignUp();
   // console.log(req)
@@ -96,35 +112,50 @@ app.get('/changePassword', auth, async (req, res) => {
   res.status(response.status).end(JSON.stringify(response));
 });
 
-app.get('/updateCountry', auth, async (req, res) => {
+app.post('/updateCountry', auth, async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js")
   var john = new LoginOrSignUp();
 
-  let response = await john.updateProfile(req.user.user, req.country);
+  let response = await john.updateProfile(req.user.user, req.query.country);
   res.status(response.status).end(JSON.stringify(response))
 });
 
-app.get('/updateDateOfBirth', auth, async (req, res) => {
+app.post('/updateDateOfBirth', auth, async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js")
   var john = new LoginOrSignUp();
 
-  let response = await john.updateProfile(req.user.user, req.date_of_birth);
+  let response = await john.updateProfile(req.user.user, req.query.date_of_birth);
   res.status(response.status).end(JSON.stringify(response))
 });
 
-app.get('/updateContactNo', auth, async (req, res) => {
+app.post('/updateContactNo', auth, async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js")
   var john = new LoginOrSignUp();
 
-  let response = await john.updateProfile(req.user.user, req.contact_no);
+  let response = await john.updateProfile(req.user.user, req.query.contact_no);
   res.status(response.status).end(JSON.stringify(response))
 });
+
+app.post('/updateProfile', auth, upload.single('image'), async (req, res) => {
+  var LoginOrSignUp = require("./login_or_signup.js")
+  var john = new LoginOrSignUp();
+  var image = {
+    name: req.body.name,
+    desc: req.body.desc,
+    data: fs.readFileSync(path.join(__dirname + '/images/' + req.file.filename)),    
+  };
+
+  res.redirect("./");
+  let response = await john.updateProfile(req.user.user, req.query.date_of_birth, req.query.country, req.query.contact_no, image);
+  res.status(response.status).end(JSON.stringify(response))
+});
+
 
 app.get('/signUp', async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js");
   var john = new LoginOrSignUp();
   // console.log(req)
-  let response = await john.saveUser(req.user.user, req.query.password, req.query.is_subscribed);
+  let response = await john.saveUser(req.query.email, req.query.password, req.query.is_subscribed);
   res.status(response.status).end(JSON.stringify(response));
 });
 
@@ -192,14 +223,16 @@ app.get('/forgotPassword', async (req, res) => {
   var john = new LoginOrSignUp();
   // console.log(req)
   let response = await john.forgotPassword(req.query.email);
+  
   res.status(response.status).end(JSON.stringify(response));
 });
 
-app.post("/deleteAccount", auth, (req, res) => {
+app.post("/deleteAccount", auth, async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js");
   var john = new LoginOrSignUp();
   // console.log(req)
-  let response =  john.deleteAccount(req.query.email,);
+  let response =  await john.deleteAccount(req.user.user,);
+  console.log(response)
   res.status(response.status).end(JSON.stringify(response));
 })
 
