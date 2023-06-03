@@ -116,7 +116,7 @@ app.post('/updateCountry', auth, async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js")
   var john = new LoginOrSignUp();
 
-  let response = await john.updateProfile(req.user.user, req.query.country);
+  let response = await john.updateCountry(req.user.user, req.query.country);
   res.status(response.status).end(JSON.stringify(response))
 });
 
@@ -124,7 +124,7 @@ app.post('/updateDateOfBirth', auth, async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js")
   var john = new LoginOrSignUp();
 
-  let response = await john.updateProfile(req.user.user, req.query.date_of_birth);
+  let response = await john.updateDateOfBirth(req.user.user, req.query.date_of_birth);
   res.status(response.status).end(JSON.stringify(response))
 });
 
@@ -132,7 +132,7 @@ app.post('/updateContactNo', auth, async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js")
   var john = new LoginOrSignUp();
 
-  let response = await john.updateProfile(req.user.user, req.query.contact_no);
+  let response = await john.updateContactNo(req.user.user, req.query.contact_no);
   res.status(response.status).end(JSON.stringify(response))
 });
 
@@ -159,7 +159,7 @@ app.get('/signUp', async (req, res) => {
   res.status(response.status).end(JSON.stringify(response));
 });
 
-app.get('/updateSubsciption', auth, async (req, res) => {
+app.post('/updateSubsciption', auth, async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js");
   var john = new LoginOrSignUp();
   // console.log(req)
