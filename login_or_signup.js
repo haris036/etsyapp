@@ -47,7 +47,7 @@ method.saveUser = async function (_email, _password, _is_subscribed) {
   } catch (e) {
     if (e.code === 11000) {
       let response = {
-        status: 110,
+        status: 500,
         error_msg: "User already exists with same email id",
       }
       return response;
