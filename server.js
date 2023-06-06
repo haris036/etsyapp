@@ -15,7 +15,8 @@ const GenerateToken = require("./generator/token_generator")
 const app = express();
 const cors = require("cors");
 var multer = require('multer');
- 
+var path = require('path');
+var bodyParser = require('body-parser');
 var storage = multer.diskStorage({
     destination: (req, file, cb) => {
         cb(null, './images')
@@ -24,6 +25,8 @@ var storage = multer.diskStorage({
         cb(null, file.fieldname + '-' + Date.now())
     }
 });
+app.use(bodyParser.urlencoded({ extended: false }))
+app.use(bodyParser.json())
  
 var upload = multer({ storage: storage });
 const corsOptions = {
@@ -139,14 +142,19 @@ app.post('/updateContactNo', auth, async (req, res) => {
 app.post('/updateProfile', auth, upload.single('image'), async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js")
   var john = new LoginOrSignUp();
-  var image = {
-    name: req.body.name,
-    desc: req.body.desc,
-    data: fs.readFileSync(path.join(__dirname + '/images/' + req.file.filename)),    
-  };
-
-  res.redirect("./");
-  let response = await john.updateProfile(req.user.user, req.query.date_of_birth, req.query.country, req.query.contact_no, image);
+  console.log(__dirname)
+  var image = {};
+  if (req.file) {
+    image = {
+      name: req.body.name,
+      desc: req.body.desc,
+      data: fs.readFileSync(path.join(__dirname + '/images/' + req.file.filename)),    
+    };
+    john.saveImage(req.user.user, image)
+  }
+  
+  
+  let response = await john.updateProfile(req.user.user, req.query.date_of_birth, req.query.country, req.query.contact_no,);
   res.status(response.status).end(JSON.stringify(response))
 });
 
@@ -156,8 +164,21 @@ app.get('/signUp', async (req, res) => {
   var john = new LoginOrSignUp();
   // console.log(req)
   let response = await john.saveUser(req.query.email, req.query.password, req.query.is_subscribed);
+  console.log(response)
+  res.status(response.status).end(JSON.stringify(response));
+  console.log(res)
+});
+
+
+app.get('/forgotPassword', async (req, res) => {
+  var LoginOrSignUp = require("./login_or_signup.js");
+  var john = new LoginOrSignUp();
+  // console.log(req)
+  let response = await john.forgotPassword(req.query.email);
+  
   res.status(response.status).end(JSON.stringify(response));
 });
+
 
 app.post('/updateSubsciption', auth, async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js");
@@ -217,15 +238,6 @@ app.get("/refreshToken", authRefreshToken, (req, res) => {
   //generate new accessToken and 
   res.status(200).json({ accessToken: response.access_token, refreshToken: response.refresh_token })
 })
-
-app.get('/forgotPassword', async (req, res) => {
-  var LoginOrSignUp = require("./login_or_signup.js");
-  var john = new LoginOrSignUp();
-  // console.log(req)
-  let response = await john.forgotPassword(req.query.email);
-  
-  res.status(response.status).end(JSON.stringify(response));
-});
 
 app.post("/deleteAccount", auth, async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js");
