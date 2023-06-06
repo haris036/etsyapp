@@ -45,12 +45,15 @@ method.saveUser = async function (_email, _password, _is_subscribed) {
     );
     insert_id = result.insertedId;
   } catch (e) {
+    console.log(e)
     if (e.code === 11000) {
       let response = {
         status: 500,
         error_msg: "User already exists with same email id",
       }
+      console.log(response)
       return response;
+      
     }
     else {
       let response = {
@@ -352,7 +355,7 @@ method.updateContactNo = async function (_email, _contact_no) {
   return response;
 }
 
-method.save_image = async function (_email, _image) {
+method.saveImage = async function (_email, _image) {
   if (!_image){
     return response = {
       status: 200,
@@ -396,7 +399,7 @@ method.save_image = async function (_email, _image) {
 
 
 
-method.updateProfile = async function (_email, _date_of_birth, _country, _contact_no, image) {
+method.updateProfile = async function (_email, _date_of_birth, _country, _contact_no,) {
 
   try {
 
@@ -415,7 +418,7 @@ method.updateProfile = async function (_email, _date_of_birth, _country, _contac
       updateQuery.$set['country'] = _country;
     if (_contact_no)  
       updateQuery.$set['contact_no'] = _contact_no;
-    if (_image)
+    
       
       console.log(updateQuery);
 
