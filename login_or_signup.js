@@ -17,7 +17,7 @@ let uri =
 const client = new MongoClient(uri);
 
 
-method.saveUser = async function (_email, _password, _is_subscribed) {
+method.saveUser = async function (_email, _password, _is_subscribed, _country, _name) {
   let usr = "";
   let insert_id = "";
   try {
@@ -33,6 +33,8 @@ method.saveUser = async function (_email, _password, _is_subscribed) {
       password: _password,
       creation_time: Date.now(),
       email: _email,
+      country: _country,
+      name: _name,
       is_subscribed: _is_subscribed,
       last_updated: null,
       expiry: Date.now() + 2592000,
@@ -53,7 +55,7 @@ method.saveUser = async function (_email, _password, _is_subscribed) {
       }
       console.log(response)
       return response;
-      
+
     }
     else {
       let response = {
@@ -176,7 +178,7 @@ method.getUser = async function (_email, _password) {
       error_msg: e,
     }
     return response;
-    
+
   } finally {
 
     await client.close();
@@ -205,7 +207,7 @@ method.getUserProfile = async function (_email,) {
       error_msg: e,
     }
     return response;
-    
+
   } finally {
 
     await client.close();
@@ -218,7 +220,7 @@ method.getUserProfile = async function (_email,) {
   return response;
 }
 
-method.getUserProfile = async function (_email,) {
+method.getImage = async function (_email,) {
 
   let user_data;
   try {
@@ -234,7 +236,7 @@ method.getUserProfile = async function (_email,) {
       error_msg: e,
     }
     return response;
-    
+
   } finally {
 
     await client.close();
@@ -247,7 +249,7 @@ method.getUserProfile = async function (_email,) {
   return response;
 }
 
-method.updateCountry = async function (_email, _country, ) {
+method.updateCountry = async function (_email, _country,) {
 
   try {
 
@@ -346,7 +348,7 @@ method.updateContactNo = async function (_email, _contact_no) {
     await client.close();
 
   }
-  
+
   let response = {
     status: 200,
     msg: "contact no updated",
@@ -356,14 +358,14 @@ method.updateContactNo = async function (_email, _contact_no) {
 }
 
 method.saveImage = async function (_email, _image) {
-  if (!_image){
+  if (!_image) {
     return response = {
       status: 200,
       msg: "image_uploaded",
     };
   }
   try {
-    
+
     await client.connect();
     // console.log(JSON.stringify(update))
     // var updateJson = JSON.stringify({update});
@@ -375,7 +377,7 @@ method.saveImage = async function (_email, _image) {
       image_desc: _image.desc,
       data: _image.img.data,
     };
-    await dbo.collection("image_storage").replaceOne(query, doc,{ upsert: true});
+    await dbo.collection("image_storage").replaceOne(query, doc, { upsert: true });
   } catch (e) {
     console.log(e)
     let response = {
@@ -388,7 +390,7 @@ method.saveImage = async function (_email, _image) {
     await client.close();
 
   }
-  
+
   let response = {
     status: 200,
     msg: "image_uploaded",
@@ -399,7 +401,7 @@ method.saveImage = async function (_email, _image) {
 
 
 
-method.updateProfile = async function (_email, _date_of_birth, _country, _contact_no,) {
+method.updateProfile = async function (_email, _name, _date_of_birth, _country, _contact_no,) {
 
   try {
 
@@ -416,11 +418,12 @@ method.updateProfile = async function (_email, _date_of_birth, _country, _contac
       updateQuery.$set['date_of_birth'] = _date_of_birth;
     if (_country)
       updateQuery.$set['country'] = _country;
-    if (_contact_no)  
+    if (_contact_no)
       updateQuery.$set['contact_no'] = _contact_no;
-    
-      
-      console.log(updateQuery);
+    if (_name)
+      updateQuery.$set['name'] = _name;
+
+    console.log(updateQuery);
 
     await dbo.collection("user_data").updateOne(myquery, updateQuery,);
 
@@ -434,9 +437,8 @@ method.updateProfile = async function (_email, _date_of_birth, _country, _contac
   } finally {
 
     await client.close();
-
   }
-  
+
   let response = {
     status: 200,
     msg: "contact no updated",
@@ -466,7 +468,7 @@ method.deleteAccount = async function (_email,) {
   } finally {
     await client.close();
   }
-  
+
   let response = {
     status: 200,
     msg: "deleted",
@@ -497,20 +499,20 @@ method.forgotPassword = async function (_email,) {
     var john = new EmailHelper();
     // console.log(req.session);
     // console.log(req)
-    let link = "https://eprimedata.com/reset-password?token="+encodeURIComponent(user_info.access_token);
+    let link = "https://eprimedata.com/reset-password?token=" + encodeURIComponent(user_info.access_token);
     console.log(link)
     response = await john.resetPasswordEmail(_email, link);
-    var query ={
+    var query = {
       email: _email,
     }
     var doc = {
       email: _email,
       reset_password: user_info.access_token,
-      
+
     };
     const tokens = database.collection("user_tokens");
 
-    await tokens.replaceOne(query, doc,{ upsert: true});
+    await tokens.replaceOne(query, doc, { upsert: true });
 
   } catch (e) {
     console.log(e)
