@@ -18,16 +18,16 @@ var multer = require('multer');
 var path = require('path');
 var bodyParser = require('body-parser');
 var storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, './images')
-    },
-    filename: (req, file, cb) => {
-        cb(null, file.fieldname + '-' + Date.now())
-    }
+  destination: (req, file, cb) => {
+    cb(null, './images')
+  },
+  filename: (req, file, cb) => {
+    cb(null, file.fieldname + '-' + Date.now())
+  }
 });
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
- 
+
 var upload = multer({ storage: storage });
 const corsOptions = {
   origin: '*',
@@ -148,13 +148,13 @@ app.post('/updateProfile', auth, upload.single('image'), async (req, res) => {
     image = {
       name: req.body.name,
       desc: req.body.desc,
-      data: fs.readFileSync(path.join(__dirname + '/images/' + req.file.filename)),    
+      data: fs.readFileSync(path.join(__dirname + '/images/' + req.file.filename)),
     };
     john.saveImage(req.user.user, image)
   }
-  
-  
-  let response = await john.updateProfile(req.user.user, req.query.date_of_birth, req.query.country, req.query.contact_no,);
+
+
+  let response = await john.updateProfile(req.user.user, req.name, req.query.date_of_birth, req.query.country, req.query.contact_no,);
   res.status(response.status).end(JSON.stringify(response))
 });
 
@@ -163,7 +163,7 @@ app.get('/signUp', async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js");
   var john = new LoginOrSignUp();
   // console.log(req)
-  let response = await john.saveUser(req.query.email, req.query.password, req.query.is_subscribed);
+  let response = await john.saveUser(req.query.email, req.query.password, req.query.is_subscribed, req.country, req.name);
   console.log(response)
   res.status(response.status).end(JSON.stringify(response));
   console.log(res)
@@ -175,7 +175,7 @@ app.get('/forgotPassword', async (req, res) => {
   var john = new LoginOrSignUp();
   // console.log(req)
   let response = await john.forgotPassword(req.query.email);
-  
+
   res.status(response.status).end(JSON.stringify(response));
 });
 
@@ -188,15 +188,15 @@ app.post('/updateSubsciption', auth, async (req, res) => {
   res.status(response.status).end(JSON.stringify(response));
 });
 
-app.get('/getSingleListing/:listing_id', 
- auth, 
-async (req, res) => {
-  var SingleListing = require("./single_listing.js");
-  // sleep(500);
-  var john = new SingleListing();
-  let response = await john.getSingleListing(req.params.listing_id);
-  res.status(response.status).end(JSON.stringify(response));
-});
+app.get('/getSingleListing/:listing_id',
+  auth,
+  async (req, res) => {
+    var SingleListing = require("./single_listing.js");
+    // sleep(500);
+    var john = new SingleListing();
+    let response = await john.getSingleListing(req.params.listing_id);
+    res.status(response.status).end(JSON.stringify(response));
+  });
 
 
 app.get('/calculateProfit', auth, async (req, res) => {
@@ -207,7 +207,7 @@ app.get('/calculateProfit', auth, async (req, res) => {
     parseFloat(req.query.cust_coupon), parseFloat(req.query.labor_cost), parseFloat(req.query.material_cost),
     parseFloat(req.query.shipping_cost), parseFloat(req.query.etsy_ads), parseFloat(req.query.renewing),
     parseFloat(req.query.offside_ads_fee_per));
-    res.status(response.status).end(JSON.stringify(response));
+  res.status(response.status).end(JSON.stringify(response));
 });
 
 
@@ -231,22 +231,26 @@ app.get('/paymentProcess', async (req, res) => {
 app.get("/refreshToken", authRefreshToken, (req, res) => {
   var tokenGenerator = new GenerateToken();
   response = tokenGenerator.getToken(req.user.user);
-    // res.status(400).send("Refresh Token Invalid")
-    //refreshTokens = refreshTokens.filter((c) => c != req.body.token)
+  // res.status(400).send("Refresh Token Invalid")
+  //refreshTokens = refreshTokens.filter((c) => c != req.body.token)
   //remove the old refreshToken from the refreshTokens list
-  
+
   //generate new accessToken and 
   res.status(200).json({ accessToken: response.access_token, refreshToken: response.refresh_token })
-})
+});
+
+app.get("/me", auth, async (req, res) => {
+  res.status(200).json(req.user.user)
+});
 
 app.post("/deleteAccount", auth, async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js");
   var john = new LoginOrSignUp();
   // console.log(req)
-  let response =  await john.deleteAccount(req.user.user,);
+  let response = await john.deleteAccount(req.user.user,);
   console.log(response)
   res.status(response.status).end(JSON.stringify(response));
-})
+});
 
 // app.get('/callbackUrl', async (req, res) => {
 //   console.log("request: "+ JSON.stringify(req));
