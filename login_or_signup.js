@@ -170,6 +170,11 @@ method.getUser = async function (_email, _password) {
       email: user_data.email,
       access_token: response.access_token,
       refresh_token: response.refresh_token,
+      user_id: user_data.user,
+      is_subscribed: user_data.is_subscribed,
+      contact_no: user_data.contact_no?user_data.contact_no:null,
+      country: user_data.country?user_data.country:null,
+      date_of_birth: user_data.date_of_birth?user_data.date_of_birth:null,
     }
     console.log(user_info)
   } catch (e) {
@@ -215,7 +220,14 @@ method.getUserProfile = async function (_email,) {
   }
   let response = {
     status: 200,
-    user_info: user_data,
+    user_info: {
+      user_id: user_data.user,
+      email: user_data.email,
+      is_subscribed: user_data.is_subscribed,
+      contact_no: user_data.contact_no?user_data.contact_no:null,
+      country: user_data.country?user_data.country:null,
+      date_of_birth: user_data.date_of_birth?user_data.date_of_birth:null,
+    }
   }
   return response;
 }
@@ -375,7 +387,7 @@ method.saveImage = async function (_email, _image) {
       email: _email,
       image_name: _image.name,
       image_desc: _image.desc,
-      data: _image.img.data,
+      data: _image.data,
     };
     await dbo.collection("image_storage").replaceOne(query, doc, { upsert: true });
   } catch (e) {
