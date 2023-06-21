@@ -48,7 +48,7 @@ app.use(cors(corsOptions));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
+// app.set("view engine", "ejs");
 //serving public file
 app.use(express.static(__dirname));
 
@@ -75,16 +75,20 @@ app.get('/getHistory', auth, async (req, res) => {
   res.status(response.status).end(JSON.stringify(response));
 });
 
-app.get('/getProfile', auth, async (req, res) => {
+app.get('/me', auth, async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js");
   var john = new LoginOrSignUp();
-  let response = await john.getUser(req.user.user,);
+  let response = await john.getUserProfile(req.user.user,);
   let img_response = await john.getImage(req.user.user);
   // let image_data;
   if (img_response.status == 200) {
     response['image_data'] = img_response.image_data;
   }
-  res.status(response.status).end(JSON.stringify(response));
+
+  if (response.image_data)
+    res.status(response.status).end(JSON.stringify(response));
+  else 
+    res.status(response.status).end(JSON.stringify(response));
 });
 
 app.get('/generateEmail', auth, async (req, res) => {
@@ -102,7 +106,13 @@ app.get('/signIn', async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js");
   var john = new LoginOrSignUp();
   let response = await john.getUser(req.query.email, req.query.password);
-  console.log(response)
+  if (response.status == 200) {
+    let img_response = await john.getImage(req.user.user);
+    // let image_data;
+    if (img_response.status == 200) {
+      response['image_data'] = img_response.image_data;
+    }
+  }
   res.status(response.status).end(JSON.stringify(response));
 });
 
@@ -143,14 +153,16 @@ app.post('/updateProfile', auth, upload.single('image'), async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js")
   var john = new LoginOrSignUp();
   console.log(__dirname)
+
   var image = {};
   if (req.file) {
     image = {
       name: req.body.name,
       desc: req.body.desc,
       data: fs.readFileSync(path.join(__dirname + '/images/' + req.file.filename)),
+      
     };
-    john.saveImage(req.user.user, image)
+    await john.saveImage(req.user.user, image)
   }
 
 
