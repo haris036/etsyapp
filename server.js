@@ -62,7 +62,7 @@ app.get('/getListing/:keyword', auth, async (req, res) => {
   var john = new Listing();
   //sleep(500);
   let is_single_listing = false;
-  let response = await john.getListing(req.params.keyword, req.user, is_single_listing);
+  let response = await john.getListing(req.params.keyword, req.user.user, is_single_listing);
   res.status(response.status).end(JSON.stringify(response));
 });
 
@@ -167,7 +167,7 @@ app.post('/updateProfile', auth, upload.single('image'), async (req, res) => {
   }
 
 
-  let response = await john.updateProfile(req.user.user, req.name, req.query.date_of_birth, req.query.country, req.query.contact_no,);
+  let response = await john.updateProfile(req.user.user, req.query.name, req.query.date_of_birth, req.query.country, req.query.contact_no,);
   res.status(response.status).end(JSON.stringify(response))
 });
 
@@ -176,7 +176,7 @@ app.get('/signUp', async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js");
   var john = new LoginOrSignUp();
   // console.log(req)
-  let response = await john.saveUser(req.query.email, req.query.password, req.query.is_subscribed, req.country, req.name);
+  let response = await john.saveUser(req.query.email, req.query.password, req.query.is_subscribed, req.query.country, req.query.name);
   console.log(response)
   res.status(response.status).end(JSON.stringify(response));
   console.log(res)
