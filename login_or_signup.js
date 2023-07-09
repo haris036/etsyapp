@@ -170,6 +170,7 @@ method.getUser = async function (_email, _password) {
       email: user_data.email,
       access_token: response.access_token,
       refresh_token: response.refresh_token,
+      name: user_data.name,
       user_id: user_data.user,
       is_subscribed: user_data.is_subscribed,
       contact_no: user_data.contact_no?user_data.contact_no:null,
@@ -223,6 +224,7 @@ method.getUserProfile = async function (_email,) {
     user_info: {
       user_id: user_data.user,
       email: user_data.email,
+      name: user_data.name,
       is_subscribed: user_data.is_subscribed,
       contact_no: user_data.contact_no?user_data.contact_no:null,
       country: user_data.country?user_data.country:null,
