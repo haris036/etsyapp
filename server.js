@@ -82,13 +82,11 @@ app.get('/me', auth, async (req, res) => {
   let img_response = await john.getImage(req.user.user);
   // let image_data;
   if (img_response.status == 200) {
-    response['image_data'] = img_response.image_data;
-  }
+    if (img_response.image_data)
+    response['image_url'] = img_response.image_data.file_path;
 
-  if (response.image_data)
-    res.status(response.status).end(JSON.stringify(response));
-  else 
-    res.status(response.status).end(JSON.stringify(response));
+  }
+  res.status(response.status).end(JSON.stringify(response));
 });
 
 app.get('/generateEmail', auth, async (req, res) => {
@@ -110,7 +108,9 @@ app.get('/signIn', async (req, res) => {
     let img_response = await john.getImage(req.user.user);
     // let image_data;
     if (img_response.status == 200) {
-      response['image_data'] = img_response.image_data;
+      if (img_response.image_data)
+      response['image_url'] = img_response.image_data.file_path;
+
     }
   }
   res.status(response.status).end(JSON.stringify(response));
@@ -159,7 +159,8 @@ app.post('/updateProfile', auth, upload.single('image'), async (req, res) => {
     image = {
       name: req.body.name,
       desc: req.body.desc,
-      data: fs.readFileSync(path.join(__dirname + '/images/' + req.file.filename)),
+      file_path: req.file.path,
+      // data: fs.readFileSync(path.join(__dirname + '/images/' + req.file.filename)),
       
     };
     await john.saveImage(req.user.user, image)
