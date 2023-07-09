@@ -387,7 +387,8 @@ method.saveImage = async function (_email, _image) {
       email: _email,
       image_name: _image.name,
       image_desc: _image.desc,
-      data: _image.data,
+      file_path: _image.file_path,
+      // data: _image.data,
     };
     await dbo.collection("image_storage").replaceOne(query, doc, { upsert: true });
   } catch (e) {
