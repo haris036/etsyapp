@@ -105,7 +105,7 @@ app.get('/signIn', async (req, res) => {
   var john = new LoginOrSignUp();
   let response = await john.getUser(req.query.email, req.query.password);
   if (response.status == 200) {
-    let img_response = await john.getImage(req.user.user);
+    let img_response = await john.getImage(req.query.email);
     // let image_data;
     if (img_response.status == 200) {
       if (img_response.image_data)
