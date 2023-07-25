@@ -315,9 +315,7 @@ in the initial authorization request, and the client verifier compliment
 to the code_challenge sent with the initial authorization request
 */
 // Start the server on port 3003
-const port = 3003;
-const hostname = "0.0.0.0";
-app.listen(port, hostname, () => {
-  console.log(`Example app listening at http://localhost:${port}`);
-});
+app.listen(process.env.PORT || 3003, 
+	() => console.log("Server is running...")
+);
 
