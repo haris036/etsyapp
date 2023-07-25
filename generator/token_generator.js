@@ -10,28 +10,31 @@ function GenerateToken() { }
 method.getToken =  function (user_id) {
     console.log(user_id)
     let response = {
-        access_token: generateAccessToken(user_id, "15m"),
-        refresh_token: generateRefreshToken(user_id)
+        access_token: generateAccessToken(user_id, "Takasssshi", "15m"),
+        refresh_token:  generateAccessToken(user_id, "TakasssshiR", "20m"),
     };
     return response;
 }
 
 method.getResetPasswordToken =  function (user_id) {
     let response = {
-        access_token: generateAccessToken(user_id, "60m"),
+        access_token: generateAccessToken(user_id, "Charger", "60m"),
     };
     return response;
 }
 
-function generateAccessToken(user, time) {
-    return jwt.sign({user}, "Haris", { expiresIn: time });
+method.getVerifiedOtpToken =  function (user_id) {
+    console.log(user_id)
+    let response = {
+        access_token: generateAccessToken(user_id,"Wire", "15m"),
+    };
+    return response;
 }
 
-function generateRefreshToken(user) {
-    const refreshToken =
-        jwt.sign({user}, "Haris", { expiresIn: "20m" });
-    return refreshToken
+function generateAccessToken(user, key, time) {
+    return jwt.sign({user}, key, { expiresIn: time });
 }
+
 
 
 module.exports = GenerateToken;

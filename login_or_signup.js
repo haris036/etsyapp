@@ -5,7 +5,7 @@ const username = encodeURIComponent("harisarif103");
 const password = encodeURIComponent("Temp.123");
 
 const cluster = "mycluster.u9r3f1e.mongodb.net";
-
+const {generateOTP} = require("./helper/otp_generator"); 
 const GenerateToken = require("./generator/token_generator")
 var method = LoginOrSignup.prototype;
 function LoginOrSignup() { }
@@ -138,6 +138,50 @@ method.updateSubscription = async function (_email, _is_subscribed) {
   let response = {
     status: 200,
     msg: "Updated",
+  }
+  return response;
+}
+
+
+method.getUserToken = async function (_email,) {
+
+  let user_info;
+  try {
+
+    await client.connect();
+
+    const database = client.db("etsy_database");
+    const users = database.collection("user_tokens");
+    const user_data = await users.findOne({ email: _email });
+    let response;
+    // console.log(user_data)
+    
+    if (user_data == null) {
+      return response = {
+        status: 404,
+        error_msg: "invalid code",
+      }
+    }
+
+    user_info = {
+      otp: user_data.otp,
+    }
+    console.log(user_info)
+  } catch (e) {
+    let response = {
+      status: 500,
+      error_msg: e,
+    }
+    return response;
+
+  } finally {
+
+    await client.close();
+
+  }
+  let response = {
+    status: 200,
+    user_info: user_info,
   }
   return response;
 }
@@ -520,10 +564,11 @@ method.forgotPassword = async function (_email,) {
     var query = {
       email: _email,
     }
+    const otpGenerated = generateOTP();
     var doc = {
       email: _email,
       reset_password: user_info.access_token,
-
+      otp: otpGenerated,
     };
     const tokens = database.collection("user_tokens");
 
