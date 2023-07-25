@@ -11,6 +11,8 @@ const cookieParser = require('cookie-parser');
 // Create a new express application
 const auth = require('./middleware/auth');
 const authRefreshToken = require('./middleware/auth_refresh_token');
+const forgotAuthPasswordToken = require('./middleware/forgot_password_token');
+const otpAuthToken = require('./middleware/auth_otp_token');
 const GenerateToken = require("./generator/token_generator")
 const app = express();
 const cors = require("cors");
@@ -22,7 +24,7 @@ var storage = multer.diskStorage({
     cb(null, './images')
   },
   filename: (req, file, cb) => {
-    cb(null, file.fieldname + '-' + Date.now())
+    cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname))
   }
 });
 app.use(bodyParser.urlencoded({ extended: false }))
@@ -83,7 +85,7 @@ app.get('/me', auth, async (req, res) => {
   // let image_data;
   if (img_response.status == 200) {
     if (img_response.image_data)
-    response['image_url'] = img_response.image_data.file_path;
+      response.user_info['image_url'] = img_response.image_data.file_path;
 
   }
   res.status(response.status).end(JSON.stringify(response));
@@ -109,8 +111,7 @@ app.get('/signIn', async (req, res) => {
     // let image_data;
     if (img_response.status == 200) {
       if (img_response.image_data)
-      response['image_url'] = img_response.image_data.file_path;
-
+        response.user_info['image_url'] = img_response.image_data.file_path;
     }
   }
   res.status(response.status).end(JSON.stringify(response));
@@ -118,6 +119,14 @@ app.get('/signIn', async (req, res) => {
 
 
 app.post('/changePassword', auth, async (req, res) => {
+  var LoginOrSignUp = require("./login_or_signup.js");
+  var john = new LoginOrSignUp();
+  // console.log(req)
+  let response = await john.updateUserPassword(req.user.user, req.query.password);
+  res.status(response.status).end(JSON.stringify(response));
+});
+
+app.post('/changePasswordByVerifyingOtp', otpAuthToken, async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js");
   var john = new LoginOrSignUp();
   // console.log(req)
@@ -152,7 +161,7 @@ app.post('/updateContactNo', auth, async (req, res) => {
 app.post('/updateProfile', auth, upload.single('image'), async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js")
   var john = new LoginOrSignUp();
-  console.log(__dirname)
+  // console.log(__dirname)
 
   var image = {};
   if (req.file) {
@@ -161,7 +170,7 @@ app.post('/updateProfile', auth, upload.single('image'), async (req, res) => {
       desc: req.body.desc,
       file_path: req.file.path,
       // data: fs.readFileSync(path.join(__dirname + '/images/' + req.file.filename)),
-      
+
     };
     await john.saveImage(req.user.user, image)
   }
@@ -191,6 +200,23 @@ app.get('/forgotPassword', async (req, res) => {
 
   res.status(response.status).end(JSON.stringify(response));
 });
+
+app.get('/verifyCode', forgotAuthPasswordToken, async (req, res) => {
+  var LoginOrSignUp = require("./login_or_signup.js");
+  var john = new LoginOrSignUp();
+  const { email, otp } = req.body;
+  // console.log(req)
+  let user_info_response = await john.forgotPassword(email);
+  let response = validateCode(otp, user_info_response);
+  if (response.status == 200) {
+    let tokenGenerator = new GenerateToken();
+    let token_info = tokenGenerator.getToken(email,);
+    response['access_token'] = token_info.access_token;
+    response['refresh_token'] = token_info.refresh_token;
+  }
+  res.status(token_info.status).end(JSON.stringify(response));
+});
+
 
 
 app.post('/updateSubsciption', auth, async (req, res) => {
@@ -264,6 +290,21 @@ app.post("/deleteAccount", auth, async (req, res) => {
   console.log(response)
   res.status(response.status).end(JSON.stringify(response));
 });
+
+function validateCode(otp, user_info_response) {
+  if (user_info_response.otp == otp) {
+    return response = {
+      status: 200,
+      msg: "verified"
+    }
+  }
+  else {
+    return response = {
+      status: 404,
+      msg: "not verified"
+    }
+  }
+}
 
 // app.get('/callbackUrl', async (req, res) => {
 //   console.log("request: "+ JSON.stringify(req));
