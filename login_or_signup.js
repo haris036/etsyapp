@@ -558,9 +558,7 @@ method.forgotPassword = async function (_email,) {
     var john = new EmailHelper();
     // console.log(req.session);
     // console.log(req)
-    let link = "https://eprimedata.com/reset-password?token=" + encodeURIComponent(user_info.access_token);
-    console.log(link)
-    response = await john.resetPasswordEmail(_email, link);
+
     var query = {
       email: _email,
     }
@@ -573,6 +571,11 @@ method.forgotPassword = async function (_email,) {
     const tokens = database.collection("user_tokens");
 
     await tokens.replaceOne(query, doc, { upsert: true });
+
+    let link = "https://eprimedata.com/reset-password?token=" + encodeURIComponent(user_info.access_token) + "\nOtp:" + otpGenerated;
+    
+    console.log(link)
+    response = await john.resetPasswordEmail(_email, link);
 
   } catch (e) {
     console.log(e)
