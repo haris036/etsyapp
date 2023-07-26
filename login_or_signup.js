@@ -142,6 +142,38 @@ method.updateSubscription = async function (_email, _is_subscribed) {
   return response;
 }
 
+method.updateOtpExpiration = async function (_email, _is_expired) {
+
+  try {
+
+    await client.connect();
+    var dbo = client.db("etsy_database");
+    var myquery = { email: _email };
+    var newvalues = {
+      $set: {
+        is_expire: _is_expired,
+
+      }
+    };
+    await dbo.collection("user_tokens").updateOne(myquery, newvalues);
+  } catch (e) {
+    let response = {
+      status: 500,
+      error_msg: e,
+    }
+    return response;
+  } finally {
+
+    await client.close();
+
+  }
+  let response = {
+    status: 200,
+    msg: "Updated",
+  }
+  return response;
+}
+
 
 method.getUserToken = async function (_email,) {
 
@@ -159,12 +191,13 @@ method.getUserToken = async function (_email,) {
     if (user_data == null) {
       return response = {
         status: 404,
-        error_msg: "invalid code",
+        error_msg: "No user found",
       }
     }
 
     user_info = {
       otp: user_data.otp,
+      is_expired: user_data.is_expired,
     }
     console.log(user_info)
   } catch (e) {
@@ -567,13 +600,16 @@ method.forgotPassword = async function (_email,) {
       email: _email,
       reset_password: user_info.access_token,
       otp: otpGenerated,
+      is_expired: "N",
     };
     const tokens = database.collection("user_tokens");
 
     await tokens.replaceOne(query, doc, { upsert: true });
 
-    let link = "https://eprimedata.com/reset-password?token=" + encodeURIComponent(user_info.access_token) + "\nOtp:" + otpGenerated;
-    
+    let link = "https://eprimedata.com/reset-password?token=" + encodeURIComponent(user_info.access_token) ;
+    link = link +"\n";
+    link =  link + "Otp: "+ otpGenerated;
+
     console.log(link)
     response = await john.resetPasswordEmail(_email, link);
 
