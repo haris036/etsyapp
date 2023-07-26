@@ -201,20 +201,31 @@ app.get('/forgotPassword', async (req, res) => {
   res.status(response.status).end(JSON.stringify(response));
 });
 
+app.get('/image/:fileName', function (req, res) {
+  const filePath = // find out the filePath based on given fileName
+  res.sendFile(filePath);
+});
+
 app.get('/verifyCode', forgotAuthPasswordToken, async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js");
   var john = new LoginOrSignUp();
+  console.log(req.body)
   const { email, otp } = req.body;
+  console.log(otp)
   // console.log(req)
-  let user_info_response = await john.forgotPassword(email);
-  let response = validateCode(otp, user_info_response);
-  if (response.status == 200) {
-    let tokenGenerator = new GenerateToken();
-    let token_info = tokenGenerator.getToken(email,);
-    response['access_token'] = token_info.access_token;
-    response['refresh_token'] = token_info.refresh_token;
+  let user_info_response = await john.getUserToken(email);
+  if (user_info_response.status == 200){
+    console.log(user_info_response)
+    let response = validateCode(otp, user_info_response.user_info);
+    if (response.status == 200) {
+      let tokenGenerator = new GenerateToken();
+      let token_info = tokenGenerator.getVerifiedOtpToken(email,);
+      response['access_token'] = token_info.access_token;
+      await john.updateOtpExpiration(email, "Y");
+    }
   }
-  res.status(token_info.status).end(JSON.stringify(response));
+  console.log(response)
+  res.status(response.status).end(JSON.stringify(response));
 });
 
 
@@ -292,6 +303,13 @@ app.post("/deleteAccount", auth, async (req, res) => {
 });
 
 function validateCode(otp, user_info_response) {
+  console.log(user_info_response.otp)
+  if (user_info_response.is_expired == "Y") {
+    return response = {
+      status: 404,
+      msg: "Otp expired"
+    }
+  }
   if (user_info_response.otp == otp) {
     return response = {
       status: 200,
@@ -301,7 +319,7 @@ function validateCode(otp, user_info_response) {
   else {
     return response = {
       status: 404,
-      msg: "not verified"
+      msg: "invalid code"
     }
   }
 }
