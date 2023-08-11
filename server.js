@@ -206,7 +206,7 @@ app.get('/image/:fileName', function (req, res) {
   res.sendFile(filePath);
 });
 
-app.get('/verifyCode', forgotAuthPasswordToken, async (req, res) => {
+app.post('/verifyCode', forgotAuthPasswordToken, async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js");
   var john = new LoginOrSignUp();
   console.log(req.body)
