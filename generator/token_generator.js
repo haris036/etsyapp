@@ -6,9 +6,9 @@ const jwt = require("jsonwebtoken");
 
 var method = GenerateToken.prototype;
 
-function GenerateToken() { }
 method.getToken =  function (user_id) {
-    console.log(user_id)
+    function GenerateToken() { }
+    // console.log(user_id)
     let response = {
         access_token: generateAccessToken(user_id, "Takasssshi", "15m"),
         refresh_token:  generateAccessToken(user_id, "TakasssshiR", "20m"),

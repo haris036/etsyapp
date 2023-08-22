@@ -5,15 +5,12 @@ const username = encodeURIComponent("harisarif103");
 const password = encodeURIComponent("Temp.123");
 
 const cluster = "mycluster.u9r3f1e.mongodb.net";
-const {generateOTP} = require("./helper/otp_generator"); 
+const { generateOTP } = require("./helper/otp_generator");
 const GenerateToken = require("./generator/token_generator")
 var method = LoginOrSignup.prototype;
 function LoginOrSignup() { }
 
-let uri =
-
-  `mongodb+srv://${username}:${password}@${cluster}/?retryWrites=true&w=majority`;
-// authSource=${authSource}&authMechanism=${authMechanism}
+let uri = `mongodb+srv://${username}:${password}@${cluster}/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri);
 
 
@@ -42,9 +39,7 @@ method.saveUser = async function (_email, _password, _is_subscribed, _country, _
     };
     const result = await collection.insertOne(doc);
 
-    console.log(
-      `A document was inserted with the _id: ${result.insertedId}`,
-    );
+    console.log(`A document was inserted with the _id: ${result.insertedId}`);
     insert_id = result.insertedId;
   } catch (e) {
     console.log(e)
@@ -65,9 +60,7 @@ method.saveUser = async function (_email, _password, _is_subscribed, _country, _
       return response;
     }
   } finally {
-
     await client.close();
-
   }
   let response = {
     status: 200,
@@ -78,11 +71,8 @@ method.saveUser = async function (_email, _password, _is_subscribed, _country, _
 }
 
 method.updateUserPassword = async function (_email, _password) {
-
   try {
-
     await client.connect();
-
     var dbo = client.db("etsy_database");
     var myquery = { email: _email };
     var newvalues = {
@@ -92,7 +82,6 @@ method.updateUserPassword = async function (_email, _password) {
       }
     };
     await dbo.collection("user_data").updateOne(myquery, newvalues);
-
   } catch (e) {
     let response = {
       status: 500,
@@ -110,9 +99,7 @@ method.updateUserPassword = async function (_email, _password) {
 }
 
 method.updateSubscription = async function (_email, _is_subscribed) {
-
   try {
-
     await client.connect();
     var dbo = client.db("etsy_database");
     var myquery = { email: _email };
@@ -131,9 +118,7 @@ method.updateSubscription = async function (_email, _is_subscribed) {
     }
     return response;
   } finally {
-
     await client.close();
-
   }
   let response = {
     status: 200,
@@ -143,16 +128,13 @@ method.updateSubscription = async function (_email, _is_subscribed) {
 }
 
 method.updateOtpExpiration = async function (_email, _is_expired) {
-
   try {
-
     await client.connect();
     var dbo = client.db("etsy_database");
     var myquery = { email: _email };
     var newvalues = {
       $set: {
-        is_expire: _is_expired,
-
+        is_expired: _is_expired,
       }
     };
     await dbo.collection("user_tokens").updateOne(myquery, newvalues);
@@ -173,21 +155,14 @@ method.updateOtpExpiration = async function (_email, _is_expired) {
   }
   return response;
 }
-
-
 method.getUserToken = async function (_email,) {
-
   let user_info;
   try {
-
     await client.connect();
-
     const database = client.db("etsy_database");
     const users = database.collection("user_tokens");
     const user_data = await users.findOne({ email: _email });
     let response;
-    // console.log(user_data)
-    
     if (user_data == null) {
       return response = {
         status: 404,
@@ -206,11 +181,8 @@ method.getUserToken = async function (_email,) {
       error_msg: e,
     }
     return response;
-
   } finally {
-
     await client.close();
-
   }
   let response = {
     status: 200,
@@ -231,7 +203,6 @@ method.getUser = async function (_email, _password) {
     const users = database.collection("user_data");
     const user_data = await users.findOne({ email: _email });
     let response;
-    // console.log(user_data)
     var tokenGenerator = new GenerateToken();
     if (user_data == null) {
       return response = {
@@ -250,9 +221,9 @@ method.getUser = async function (_email, _password) {
       name: user_data.name,
       user_id: user_data.user,
       is_subscribed: user_data.is_subscribed,
-      contact_no: user_data.contact_no?user_data.contact_no:null,
-      country: user_data.country?user_data.country:null,
-      date_of_birth: user_data.date_of_birth?user_data.date_of_birth:null,
+      contact_no: user_data.contact_no ? user_data.contact_no : null,
+      country: user_data.country ? user_data.country : null,
+      date_of_birth: user_data.date_of_birth ? user_data.date_of_birth : null,
     }
     console.log(user_info)
   } catch (e) {
@@ -303,9 +274,9 @@ method.getUserProfile = async function (_email,) {
       email: user_data.email,
       name: user_data.name,
       is_subscribed: user_data.is_subscribed,
-      contact_no: user_data.contact_no?user_data.contact_no:null,
-      country: user_data.country?user_data.country:null,
-      date_of_birth: user_data.date_of_birth?user_data.date_of_birth:null,
+      contact_no: user_data.contact_no ? user_data.contact_no : null,
+      country: user_data.country ? user_data.country : null,
+      date_of_birth: user_data.date_of_birth ? user_data.date_of_birth : null,
     }
   }
   return response;
@@ -458,8 +429,6 @@ method.saveImage = async function (_email, _image) {
   try {
 
     await client.connect();
-    // console.log(JSON.stringify(update))
-    // var updateJson = JSON.stringify({update});
     var dbo = client.db("etsy_database");
     var query = { email: _email };
     var doc = {
@@ -467,7 +436,6 @@ method.saveImage = async function (_email, _image) {
       image_name: _image.name,
       image_desc: _image.desc,
       file_path: _image.file_path,
-      // data: _image.data,
     };
     await dbo.collection("image_storage").replaceOne(query, doc, { upsert: true });
   } catch (e) {
@@ -498,8 +466,6 @@ method.updateProfile = async function (_email, _name, _date_of_birth, _country, 
   try {
 
     await client.connect();
-    // console.log(JSON.stringify(update))
-    // var updateJson = JSON.stringify({update});
     var dbo = client.db("etsy_database");
     var myquery = { email: _email };
     var updateQuery = {
@@ -606,9 +572,9 @@ method.forgotPassword = async function (_email,) {
 
     await tokens.replaceOne(query, doc, { upsert: true });
 
-    let link = "https://eprimedata.com/reset-password?token=" + encodeURIComponent(user_info.access_token) ;
-    link = link +"\n";
-    link =  link + "Otp: "+ otpGenerated;
+    let link = "https://eprimedata.com/reset-password?token=" + encodeURIComponent(user_info.access_token);
+    link = link + "\n";
+    link = link + "Otp: " + otpGenerated;
 
     console.log(link)
     response = await john.resetPasswordEmail(_email, link);
@@ -630,8 +596,4 @@ method.forgotPassword = async function (_email,) {
   return response;
 }
 
-
-// getUser("zkh").catch(console.dir);
-// saveUser("zkh@gmail.com", "Temp.123", "N").catch(console.dir);
-// updateUserPassword("zkh", "Temp.1234")
 module.exports = LoginOrSignup;

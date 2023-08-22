@@ -36,21 +36,9 @@ const corsOptions = {
   optionSuccessStatus: 200,
 }
 app.use(cors(corsOptions));
-// // var _OAuthToken = "";
-// // var _OAuthTokenScret = "";
-// var oa = new OAuth.OAuth(
-//   'https://openapi.etsy.com/v2/oauth/request_token?scope=email_r%20listings_r',
-//   'https://openapi.etsy.com/v2/oauth/access_token',
-//   '7vudmbql4ympd8mrzsajli9n',
-//   'wqbda069fr',
-//   '1.0A',
-//   "http://localhost:5000/callback",
-//   'HMAC-SHA1'
-// );
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-// app.set("view engine", "ejs");
+
 //serving public file
 app.use(express.static(__dirname));
 
@@ -62,7 +50,6 @@ app.get('/', async (req, res) => {
 app.get('/getListing/:keyword', auth, async (req, res) => {
   var Listing = require("./listing.js");
   var john = new Listing();
-  //sleep(500);
   let is_single_listing = false;
   let response = await john.getListing(req.params.keyword, req.user.user, is_single_listing);
   res.status(response.status).end(JSON.stringify(response));
@@ -72,7 +59,6 @@ app.get('/getListing/:keyword', auth, async (req, res) => {
 app.get('/getHistory', auth, async (req, res) => {
   var History = require("./history.js");
   var john = new History();
-  //sleep(500);
   let response = await john.getHistory(req.user.user);
   res.status(response.status).end(JSON.stringify(response));
 });
@@ -82,7 +68,6 @@ app.get('/me', auth, async (req, res) => {
   var john = new LoginOrSignUp();
   let response = await john.getUserProfile(req.user.user,);
   let img_response = await john.getImage(req.user.user);
-  // let image_data;
   if (img_response.status == 200) {
     if (img_response.image_data)
       response.user_info['image_url'] = img_response.image_data.file_path;
@@ -94,10 +79,7 @@ app.get('/me', auth, async (req, res) => {
 app.get('/generateEmail', auth, async (req, res) => {
   var EmailHelper = require("./helper/email_helper.js");
   var john = new EmailHelper();
-  // console.log(req.session);
-  // console.log(req)
   let response = await john.generateEmail(req.user.user, req.query.text, req.query.html, req.query.subject);
-  // console.log(response);
   res.status(response.status).end(JSON.stringify(response));
 });
 
@@ -108,7 +90,6 @@ app.get('/signIn', async (req, res) => {
   let response = await john.getUser(req.query.email, req.query.password);
   if (response.status == 200) {
     let img_response = await john.getImage(req.query.email);
-    // let image_data;
     if (img_response.status == 200) {
       if (img_response.image_data)
         response.user_info['image_url'] = img_response.image_data.file_path;
@@ -121,7 +102,6 @@ app.get('/signIn', async (req, res) => {
 app.post('/changePassword', auth, async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js");
   var john = new LoginOrSignUp();
-  // console.log(req)
   let response = await john.updateUserPassword(req.user.user, req.query.password);
   res.status(response.status).end(JSON.stringify(response));
 });
@@ -129,7 +109,6 @@ app.post('/changePassword', auth, async (req, res) => {
 app.post('/changePasswordByVerifyingOtp', otpAuthToken, async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js");
   var john = new LoginOrSignUp();
-  // console.log(req)
   let response = await john.updateUserPassword(req.user.user, req.query.password);
   res.status(response.status).end(JSON.stringify(response));
 });
@@ -137,7 +116,6 @@ app.post('/changePasswordByVerifyingOtp', otpAuthToken, async (req, res) => {
 app.post('/updateCountry', auth, async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js")
   var john = new LoginOrSignUp();
-
   let response = await john.updateCountry(req.user.user, req.query.country);
   res.status(response.status).end(JSON.stringify(response))
 });
@@ -145,7 +123,6 @@ app.post('/updateCountry', auth, async (req, res) => {
 app.post('/updateDateOfBirth', auth, async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js")
   var john = new LoginOrSignUp();
-
   let response = await john.updateDateOfBirth(req.user.user, req.query.date_of_birth);
   res.status(response.status).end(JSON.stringify(response))
 });
@@ -153,7 +130,6 @@ app.post('/updateDateOfBirth', auth, async (req, res) => {
 app.post('/updateContactNo', auth, async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js")
   var john = new LoginOrSignUp();
-
   let response = await john.updateContactNo(req.user.user, req.query.contact_no);
   res.status(response.status).end(JSON.stringify(response))
 });
@@ -161,22 +137,20 @@ app.post('/updateContactNo', auth, async (req, res) => {
 app.post('/updateProfile', auth, upload.single('image'), async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js")
   var john = new LoginOrSignUp();
-  // console.log(__dirname)
-
   var image = {};
   if (req.file) {
     image = {
       name: req.body.name,
       desc: req.body.desc,
       file_path: req.file.path,
-      // data: fs.readFileSync(path.join(__dirname + '/images/' + req.file.filename)),
-
     };
     await john.saveImage(req.user.user, image)
   }
 
 
-  let response = await john.updateProfile(req.user.user, req.query.name, req.query.date_of_birth, req.query.country, req.query.contact_no,);
+  let response = await john.updateProfile(
+    req.user.user, req.query.name, req.query.date_of_birth,
+    req.query.country, req.query.contact_no,);
   res.status(response.status).end(JSON.stringify(response))
 });
 
@@ -184,8 +158,9 @@ app.post('/updateProfile', auth, upload.single('image'), async (req, res) => {
 app.get('/signUp', async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js");
   var john = new LoginOrSignUp();
-  // console.log(req)
-  let response = await john.saveUser(req.query.email, req.query.password, req.query.is_subscribed, req.query.country, req.query.name);
+  let response = await john.saveUser(
+    req.query.email, req.query.password, req.query.is_subscribed,
+    req.query.country, req.query.name);
   console.log(response)
   res.status(response.status).end(JSON.stringify(response));
   console.log(res)
@@ -195,36 +170,34 @@ app.get('/signUp', async (req, res) => {
 app.get('/forgotPassword', async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js");
   var john = new LoginOrSignUp();
-  // console.log(req)
   let response = await john.forgotPassword(req.query.email);
-
   res.status(response.status).end(JSON.stringify(response));
 });
 
 app.get('/image/:fileName', function (req, res) {
-  const filePath = // find out the filePath based on given fileName
-  res.sendFile(filePath);
+  const filePath = res.sendFile(filePath);
 });
 
 app.post('/verifyCode', forgotAuthPasswordToken, async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js");
   var john = new LoginOrSignUp();
   console.log(req.body)
-  const { email, otp } = req.body;
-  console.log(otp)
-  // console.log(req)
-  let user_info_response = await john.getUserToken(email);
-  if (user_info_response.status == 200){
-    console.log(user_info_response)
+  const { otp } = req.body;
+  // console.log(otp)
+  // console.log(req.user)
+  let user_info_response = await john.getUserToken(req.user.user);
+  // console.log(user_info_response)
+  if (user_info_response.status == 200) {
+    // console.log(user_info_response)
     let response = validateCode(otp, user_info_response.user_info);
     if (response.status == 200) {
       let tokenGenerator = new GenerateToken();
-      let token_info = tokenGenerator.getVerifiedOtpToken(email,);
+      let token_info = tokenGenerator.getVerifiedOtpToken(req.user.user,);
       response['access_token'] = token_info.access_token;
-      await john.updateOtpExpiration(email, "Y");
+      await john.updateOtpExpiration(req.user.user, "Y");
     }
   }
-  console.log(response)
+  // console.log(response)
   res.status(response.status).end(JSON.stringify(response));
 });
 
@@ -233,7 +206,6 @@ app.post('/verifyCode', forgotAuthPasswordToken, async (req, res) => {
 app.post('/updateSubsciption', auth, async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js");
   var john = new LoginOrSignUp();
-  // console.log(req)
   let response = await john.updateSubscription(req.user.user, req.query.is_subscribed);
   res.status(response.status).end(JSON.stringify(response));
 });
@@ -242,7 +214,6 @@ app.get('/getSingleListing/:listing_id',
   auth,
   async (req, res) => {
     var SingleListing = require("./single_listing.js");
-    // sleep(500);
     var john = new SingleListing();
     let response = await john.getSingleListing(req.params.listing_id);
     res.status(response.status).end(JSON.stringify(response));
@@ -252,7 +223,6 @@ app.get('/getSingleListing/:listing_id',
 app.get('/calculateProfit', auth, async (req, res) => {
   var ProfitCalculator = require("./profit_calculator.js");
   var john = new ProfitCalculator();
-  // console.log(req)
   let response = john.calculateProfit(parseFloat(req.query.cust_price), parseFloat(req.query.cust_shipping_price),
     parseFloat(req.query.cust_coupon), parseFloat(req.query.labor_cost), parseFloat(req.query.material_cost),
     parseFloat(req.query.shipping_cost), parseFloat(req.query.etsy_ads), parseFloat(req.query.renewing),
@@ -264,7 +234,6 @@ app.get('/calculateProfit', auth, async (req, res) => {
 app.get('/calenderHolidays', auth, async (req, res) => {
   var CalenderHolidays = require("./calender_holiday.js");
   var john = new CalenderHolidays();
-  // console.log(req)
   let response = await john.getCalenderHolidays();
   res.status(response.status).end(JSON.stringify(response));
 });
@@ -272,7 +241,6 @@ app.get('/calenderHolidays', auth, async (req, res) => {
 app.get('/paymentProcess', async (req, res) => {
   var PaymentGateway = require("./payment_gateway.js");
   var john = new PaymentGateway();
-  // console.log(req)
   let response = await john.subscribe(req.query.first_name, req.query.last_name, req.query.email);
   res.status(response.status).end(JSON.stringify(response));
 });
@@ -281,11 +249,6 @@ app.get('/paymentProcess', async (req, res) => {
 app.get("/refreshToken", authRefreshToken, (req, res) => {
   var tokenGenerator = new GenerateToken();
   response = tokenGenerator.getToken(req.user.user);
-  // res.status(400).send("Refresh Token Invalid")
-  //refreshTokens = refreshTokens.filter((c) => c != req.body.token)
-  //remove the old refreshToken from the refreshTokens list
-
-  //generate new accessToken and 
   res.status(200).json({ accessToken: response.access_token, refreshToken: response.refresh_token })
 });
 
@@ -296,7 +259,6 @@ app.get("/me", auth, async (req, res) => {
 app.post("/deleteAccount", auth, async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js");
   var john = new LoginOrSignUp();
-  // console.log(req)
   let response = await john.deleteAccount(req.user.user,);
   console.log(response)
   res.status(response.status).end(JSON.stringify(response));
@@ -324,16 +286,16 @@ function validateCode(otp, user_info_response) {
   }
 }
 
-// app.delete("/logout", auth, (req, res) => {
-//   res.end("log out");
-// })
+
 /**
 These variables contain your API Key, the state sent
 in the initial authorization request, and the client verifier compliment
 to the code_challenge sent with the initial authorization request
 */
 // Start the server on port 3003
-app.listen(process.env.PORT || 3003, 
-	() => console.log("Server is running...")
-);
+const port = 3003;
+const hostname = "0.0.0.0";
+app.listen(port, hostname, () => {
+  console.log(`Example app listening at http://localhost:${port}`);
+});
 

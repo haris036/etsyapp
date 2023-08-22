@@ -1,9 +1,8 @@
 
 const googleTrends = require('google-trends-api');
-googleTrends.relatedQueries({keyword: '2017 Westminster Dog Show',startTime: new Date('2004-01-01'), endTime: new Date('2022-10-10')})
-.then((res) => {
-  console.log(res);
-})
-.catch((err) => {
-  console.log(err);
-})
+let startTime= new Date(Date.now() - 31556926 * 1000.0)
+console.log(startTime.toISOString())
+googleTrends.interestOverTime({ keyword: 'Playstation 4', startTime: new Date('2022-07-26' ) }, function (err, results) {
+  if (err) console.log('oh no error!', err);
+  else console.log(results);
+});
