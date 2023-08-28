@@ -140,8 +140,6 @@ app.post('/updateProfile', auth, upload.single('image'), async (req, res) => {
   var image = {};
   if (req.file) {
     image = {
-      name: req.body.name,
-      desc: req.body.desc,
       file_path: req.file.path,
     };
     await john.saveImage(req.user.user, image)
@@ -149,8 +147,8 @@ app.post('/updateProfile', auth, upload.single('image'), async (req, res) => {
 
 
   let response = await john.updateProfile(
-    req.user.user, req.query.name, req.query.date_of_birth,
-    req.query.country, req.query.contact_no,);
+    req.user.user, req.body.name, req.body.date_of_birth,
+    req.body.country, req.body.contact_no,);
   res.status(response.status).end(JSON.stringify(response))
 });
 
@@ -285,8 +283,6 @@ function validateCode(otp, user_info_response) {
     }
   }
 }
-
-
 
 // app.delete("/logout", auth, (req, res) => {
 //   res.end("log out");
