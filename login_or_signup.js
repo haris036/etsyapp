@@ -433,8 +433,6 @@ method.saveImage = async function (_email, _image) {
     var query = { email: _email };
     var doc = {
       email: _email,
-      image_name: _image.name,
-      image_desc: _image.desc,
       file_path: _image.file_path,
     };
     await dbo.collection("image_storage").replaceOne(query, doc, { upsert: true });
@@ -462,9 +460,9 @@ method.saveImage = async function (_email, _image) {
 
 
 method.updateProfile = async function (_email, _name, _date_of_birth, _country, _contact_no,) {
-
+  let message = "";
   try {
-
+    
     await client.connect();
     var dbo = client.db("etsy_database");
     var myquery = { email: _email };
@@ -472,15 +470,26 @@ method.updateProfile = async function (_email, _name, _date_of_birth, _country, 
       $set: {
       }
     };
-    if (_date_of_birth)
+    if (_date_of_birth) {
       updateQuery.$set['date_of_birth'] = _date_of_birth;
-    if (_country)
+      message = message.concat("date of birth ,");
+    }
+    if (_country) {
       updateQuery.$set['country'] = _country;
-    if (_contact_no)
+      message = message.concat("country ,");
+    }
+    if (_contact_no) {
       updateQuery.$set['contact_no'] = _contact_no;
-    if (_name)
+      message = message.concat("contact no ,");
+    }
+    if (_name) {
       updateQuery.$set['name'] = _name;
-
+      message = message.concat("name ,")
+    }
+    if (message.length != 0) {
+      message = message.substring(0, message.length - 1);
+    }
+    
     console.log(updateQuery);
 
     await dbo.collection("user_data").updateOne(myquery, updateQuery,);
@@ -496,10 +505,10 @@ method.updateProfile = async function (_email, _name, _date_of_birth, _country, 
 
     await client.close();
   }
-
+  console.log(message)
   let response = {
     status: 200,
-    msg: "contact no updated",
+    msg: `${message}updated`,
   }
 
   return response;
