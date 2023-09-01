@@ -10,15 +10,15 @@ function GenerateToken() { }
 method.getToken =  function (user_id) {
     console.log(user_id)
     let response = {
-        access_token: generateAccessToken(user_id, "Takasssshi", "15m"),
-        refresh_token:  generateAccessToken(user_id, "TakasssshiR", "20m"),
+        access_token: generateAccessToken(user_id, "Takasssshi", "5m"),
+        refresh_token:  generateAccessToken(user_id, "TakasssshiR", "7m"),
     };
     return response;
 }
 
 method.getResetPasswordToken =  function (user_id) {
     let response = {
-        access_token: generateAccessToken(user_id, "Charger", "60m"),
+        access_token: generateAccessToken(user_id, "Charger", "20m"),
     };
     return response;
 }
@@ -26,7 +26,7 @@ method.getResetPasswordToken =  function (user_id) {
 method.getVerifiedOtpToken =  function (user_id) {
     console.log(user_id)
     let response = {
-        access_token: generateAccessToken(user_id,"Wire", "15m"),
+        access_token: generateAccessToken(user_id,"Wire", "5m"),
     };
     return response;
 }
