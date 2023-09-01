@@ -3,6 +3,7 @@ const fs = require('fs');
 const History = require("./history.js");
 let api_key_info = JSON.parse(fs.readFileSync("api_key.json"));
 const { MongoClient } = require("mongodb");
+const { count } = require("console");
 const username = encodeURIComponent("harisarif103");
 
 const password = encodeURIComponent("Temp.123");
@@ -51,23 +52,52 @@ method.getListing = async function (searchKeyWord, email, is_single_listing) {
     var searches = 0;
     var favourites = 0;
     var average_price = 0.0;
-
+    let count_of_timelines = 0;
+    let sum_of_time_lines = 0;
+    let date_of_timelines = "";
+    let trend;
     let history_call = history.getHistoricalMetrices(searchKeyWord).then(response => {
-      for (let i = 0; i < response.data[0].trend.length; i++) {
-        let trend = {
+      for (let i = 0; i < response.timelineData.length; i++) {
+        let date = new Date(response.timelineData[i].time * 1000.0);
+        let month =  date.getMonth() + 1;
 
-          month: response.data[0].trend[i].month,
-          year: response.data[0].trend[i].year,
-          value: response.data[0].trend[i].value,
+        let temp_date_of_timelines = "" + month + "-" + date.getFullYear();
+        if (i == 0) {
+          date_of_timelines = temp_date_of_timelines;
+          trend = {
+            month: date.getMonth() + 1,
+            year: date.getFullYear(),
+            value: 0,
+          }
+        } else if (i == response.timelineData.length - 1){
+          trend.value = response.timelineData[i].value[0];
+          // console.log(trend)
+          trends.push(trend)
+        } else if (date_of_timelines != temp_date_of_timelines) {
+          // console.log(trend)
+          trend.value = response.timelineData[i].value[0];
+          trends.push(trend)
+          trend = {
+            month: date.getMonth() + 1,
+            year: date.getFullYear(),
+            value: 0,
+          }
+          date_of_timelines = temp_date_of_timelines;
+          sum_of_time_lines=0;
+          count_of_timelines=0;
         }
-        trends.push(trend)
+        if (date_of_timelines == temp_date_of_timelines) {
+          sum_of_time_lines+=sum_of_time_lines;
+          count_of_timelines+=1;
+        }
+        
       }
       historical_metrices = {
         trends: trends,
-        competition: response.data[0].competition,
       }
 
     });
+    
     let response = await fetch(urlGetActiveListings, requestOptions);
     let results = await response.json();
     let long_tail_keyword = searchKeyWord.indexOf(' ') >= 3;
@@ -350,6 +380,7 @@ method.getListing = async function (searchKeyWord, email, is_single_listing) {
       let long_tail_alternatives = Array.from(long_tail_alternatives_map.entries());
       // let material_items = new Map()
       // console.log(material_wise_items_map);
+      console.log(historical_metrices);
       let material_items = Array.from(material_wise_items_map);
       let similar_shopper_searches = Array.from(similar_shopper_searches_map.entries());
       let result = {
@@ -371,7 +402,7 @@ method.getListing = async function (searchKeyWord, email, is_single_listing) {
         average_price: average_price / length,
         similar_shopper_searches: similar_shopper_searches,
       };
-      
+
       if (!is_single_listing) {
         await client.connect();
 
@@ -401,12 +432,12 @@ method.getListing = async function (searchKeyWord, email, is_single_listing) {
       let response = {
         status: 500,
         error_msg: `Error in getting results received respose code: ${response.status} response description: ${response.statusText}`,
-      }      
+      }
       return response;
     }
 
   } catch (e) {
-    
+
     let response = {
       status: 500,
       error_msg: e,
