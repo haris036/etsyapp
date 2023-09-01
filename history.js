@@ -1,6 +1,9 @@
 const axios = require('axios');
 const qs = require('qs');
 const { MongoClient } = require("mongodb");
+
+const googleTrends = require('google-trends-api');
+
 const username = encodeURIComponent("harisarif103");
 
 const password = encodeURIComponent("Temp.123");
@@ -28,30 +31,51 @@ let payload = {
 
 function History() { }
 method.getHistoricalMetrices = async function (searchKeyWord) {
+  let response;
   try {
-    payload.kw.push(searchKeyWord);
-    return axios.post('https://api.keywordseverywhere.com/v1/get_keyword_data',
-      qs.stringify(payload),
-      {
-        headers: {
-          'Accept': 'application/json',
-          'Authorization': `Bearer ${access_token}`
-        }
-      })
-      .then(response => response.data)
-      .catch(error => {
+    // payload.kw.push(searchKeyWord);
+    // return axios.post('https://api.keywordseverywhere.com/v1/get_keyword_data',
+    //   qs.stringify(payload),
+    //   {
+    //     headers: {
+    //       'Accept': 'application/json',
+    //       'Authorization': `Bearer ${access_token}`
+    //     }
+    //   })
+    //   .then(response => response.data)
+    //   .catch(error => {
+    //     return response = {
+    //       status: 500,
+    //       error_msg: error,
+    //     }
+    //   });
+    let startTime = new Date(Date.now() - 31556926 * 1000.0)
+    startTime.setHours(0);
+    startTime.setMinutes(0);
+    startTime.setSeconds(0);
+    startTime.setMilliseconds(0);
+    console.log(startTime.toISOString())
+
+    response = await googleTrends.interestOverTime({ keyword: searchKeyWord, startTime: startTime }, function (err, results) {
+      if (err) {
         return response = {
           status: 500,
-          error_msg: error,
-        }
-      });
+          error_msg: err,
+        };
+      }
+      else {
+        let json_results = JSON.parse(results);
+        // console.log(JSON.parse(results))
+        return json_results.default;
+      };
+    });
   } catch (e) {
     return response = {
       status: 500,
       error_msg: e,
     }
   }
-
+return response
 }
 
 method.getHistory = async function (email) {
