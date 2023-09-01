@@ -207,7 +207,7 @@ method.getUser = async function (_email, _password) {
     if (user_data == null) {
       return response = {
         status: 404,
-        error_msg: "no user found",
+        error_msg: "No user found",
       }
     }
     if (user_data.password == _password) {
@@ -340,7 +340,7 @@ method.updateCountry = async function (_email, _country,) {
   }
   let response = {
     status: 200,
-    msg: "country updated",
+    msg: "Country updated",
   }
   return response;
 }
@@ -376,7 +376,7 @@ method.updateDateOfBirth = async function (_email, _date_of_birth) {
 
   let response = {
     status: 200,
-    msg: "date of birth updated",
+    msg: "Date of birth updated",
   }
 
   return response;
@@ -413,7 +413,7 @@ method.updateContactNo = async function (_email, _contact_no) {
 
   let response = {
     status: 200,
-    msg: "contact no updated",
+    msg: "Contact number updated",
   }
 
   return response;
@@ -423,7 +423,7 @@ method.saveImage = async function (_email, _image) {
   if (!_image) {
     return response = {
       status: 200,
-      msg: "image_uploaded",
+      msg: "image uploaded",
     };
   }
   try {
@@ -451,7 +451,7 @@ method.saveImage = async function (_email, _image) {
 
   let response = {
     status: 200,
-    msg: "image_uploaded",
+    msg: "image uploaded",
   }
 
   return response;
@@ -508,7 +508,7 @@ method.updateProfile = async function (_email, _name, _date_of_birth, _country, 
   console.log(message)
   let response = {
     status: 200,
-    msg: `${message}updated`,
+    msg: "Successfully updated",
   }
 
   return response;
@@ -538,7 +538,7 @@ method.deleteAccount = async function (_email,) {
 
   let response = {
     status: 200,
-    msg: "deleted",
+    msg: "Successfully deleted",
   }
   return response;
 }
@@ -581,7 +581,7 @@ method.forgotPassword = async function (_email,) {
 
     await tokens.replaceOne(query, doc, { upsert: true });
 
-    let link = "https://eprimedata.com/reset-password?token=" + encodeURIComponent(user_info.access_token);
+    let link = "https://craftypro.co/auth/forgot-password?token=" + encodeURIComponent(user_info.access_token);
     link = link + "\n";
     link = link + "Otp: " + otpGenerated;
 
@@ -600,7 +600,7 @@ method.forgotPassword = async function (_email,) {
   }
   let response = {
     status: 200,
-    msg: "email generated",
+    msg: "Email generated",
   }
   return response;
 }
