@@ -554,7 +554,11 @@ method.forgotPassword = async function (_email,) {
     const users = database.collection("user_data");
     const user_data = await users.findOne({ email: _email });
     if (user_data == null) {
-      return "No user found";
+      let  response = {
+        status: 404,
+        error_msg: "No user found",
+      };
+      return response;    
     }
     var tokenGenerator = new GenerateToken();
     let response = tokenGenerator.getResetPasswordToken(_email);
