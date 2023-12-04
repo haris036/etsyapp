@@ -1,5 +1,5 @@
-// Import the express and fetch libraries
 const express = require('express');
+require('dotenv').config()
 const fetch = require("node-fetch");
 const fs = require('fs');
 var http = require('http');
@@ -8,17 +8,19 @@ const util = require('util');
 var nodeUrl = require('url');
 const sessions = require('express-session');
 const cookieParser = require('cookie-parser');
-// Create a new express application
 const auth = require('./middleware/auth');
 const authRefreshToken = require('./middleware/auth_refresh_token');
 const forgotAuthPasswordToken = require('./middleware/forgot_password_token');
 const otpAuthToken = require('./middleware/auth_otp_token');
-const GenerateToken = require("./generator/token_generator")
+const GenerateToken = require("./generator/token_generator");
 const app = express();
 const cors = require("cors");
 var multer = require('multer');
 var path = require('path');
 var bodyParser = require('body-parser');
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const TagListing = require("./tags_listing.js");
+// console.log(process.env.API_KEYS)
 var storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, './images')
@@ -27,6 +29,7 @@ var storage = multer.diskStorage({
     cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname))
   }
 });
+
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
 
@@ -35,16 +38,187 @@ const corsOptions = {
   origin: '*',
   optionSuccessStatus: 200,
 }
+
 app.use(cors(corsOptions));
-app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-//serving public file
 app.use(express.static(__dirname));
 
 app.get('/', async (req, res) => {
-
   res.send("<h1>Server is running</h1>")
+});
+
+app.use(
+  express.json({
+    // We need the raw body to verify webhook signatures.
+    // Let's compute it only when hitting the Stripe webhook endpoint.
+    verify: function (req, res, buf) {
+      if (req.originalUrl.startsWith("/webhook")) {
+        req.rawBody = buf.toString();
+      }
+    },
+  })
+);
+
+app.post('/add_stripe_customer', auth, async (req, res) => {
+  // console.log(req.body)
+  var LoginOrSignUp = require("./login_or_signup.js");
+  const req_customer = req.body.customer;
+  try {
+    const customer = await stripe.customers.create
+      ({
+        email
+          : req_customer.email,
+        name
+          : req_customer.name,
+        shipping
+          : {
+          address
+            : {
+            city
+              : req_customer.city,
+            country
+              : req_customer.country,
+            line1
+              : req_customer.street,
+            postal_code
+              : req_customer.postal_code,
+            state
+              : req_customer.state,
+          },
+          name: req_customer.name,
+        },
+        address
+          : {
+          city
+            : req_customer.city,
+          country
+            : req_customer.country,
+          line1
+            : req_customer.street,
+          postal_code
+            : req_customer.postal_code,
+          state
+            : req_customer.state,
+        },
+      });
+
+    var john = new LoginOrSignUp();
+    let response = await john.saveStripeUser(req.user.user, customer.id);
+
+    if (response.status != 200) {
+      return res.status(response.status).send(response);
+    }
+
+    response["customer_id"] = customer.id;
+    console.log(response)
+    return res.status(200).send(response);
+  } catch (e) {
+    return res.status(500).send(e);
+  }
+});
+
+
+app.post('/create-subscription', async (req, res) => {
+  const customerId = req.cookies['customer'];
+  const priceId = req.body.priceId;
+  var LoginOrSignUp = require("./login_or_signup.js");
+  try {
+
+    const subscription = await stripe.subscriptions.create
+      ({
+        customer
+          : customerId,
+        items
+          : [{
+            price
+              : priceId,
+          }],
+        payment_behavior
+          : 'default_incomplete',
+        payment_settings
+          : {
+          save_default_payment_method
+            : 'on_subscription'
+        },
+        expand
+          : ['latest_invoice.payment_intent'],
+      });
+    var john = new LoginOrSignUp();
+    let response = await john.updateStripeSubscribtionIdAndStatus(req.user.user, subscription.id, subscription.status);
+    if (response.status != 200) {
+      return res.status(response.status).send(response);
+    }
+    res.status(200).send(
+      response = {
+        subscriptionId: subscription.id,
+        clientSecret: subscription.latest_invoice.payment_intent.client_secret,
+      }
+    );
+  } catch (error) {
+    return res.status(400).send({ error: { message: error.message } });
+  }
+});
+
+
+app.post('/webhook', bodyParser.raw({ type: 'application/json' }), async (req, res) => {
+  let event;
+  var LoginOrSignUp = require("./login_or_signup.js");
+  try {
+    event = stripe.webhooks.constructEvent(
+      req.body,
+      req.headers['stripe-signature'],
+      process.env.STRIPE_WEBHOOK_SECRET
+    );
+  } catch (err) {
+    console.log(err);
+    console.log(`⚠️  Webhook signature verification failed.`);
+    console.log(
+      `⚠️  Check the env file and enter the correct webhook secret.`
+    );
+    return res.sendStatus(400);
+  }
+  // Extract the object from the event.
+  const dataObject = event.data.object;
+  let response;
+  // Handle the event
+  // Review important events for Billing webhooks
+  // https://stripe.com/docs/billing/webhooks
+  // Remove comment to see the various objects sent for this sample
+  switch (event.type) {
+    case 'invoice.paid':
+      var john = new LoginOrSignUp();
+      response = await john.updateStripeSubscribtionIdAndStatus(dataObject.id, "active");
+
+      break;
+    case 'invoice.payment_failed':
+      var john = new LoginOrSignUp();
+      response = await john.updateStripeSubscribtionIdAndStatus(dataObject.id, "in-active");
+      break;
+    case 'customer.subscription.deleted':
+      if (event.request == null) {
+        var john = new LoginOrSignUp();
+        response = await john.updateStripeSubscribtionIdAndStatus(dataObject.id, "un-subscribe");
+      }
+      break;
+    default:
+    // Unexpected event type
+  }
+  res.sendStatus(200);
+}
+);
+
+app.post('/cancel-subscription', async (req, res) => {
+  const deletedSubscription = await stripe.subscriptions.del(
+    req.body.subscriptionId
+  );
+  var LoginOrSignUp = require("./login_or_signup.js");
+  var john = new LoginOrSignUp();
+  response = await john.updateStripeSubscribtionIdAndStatus(dataObject.id, "un-subscribe");
+  if (response != 200) {
+    return res.status(response.status).send(response);
+  }
+  res.status(200).send(deletedSubscription);
 });
 
 app.get('/getListing/:keyword', auth, async (req, res) => {
@@ -55,6 +229,179 @@ app.get('/getListing/:keyword', auth, async (req, res) => {
   res.status(response.status).end(JSON.stringify(response));
 });
 
+
+
+app.get('/nextSimilarShopperTags', auth, async (req, res) => {
+  let map = req.body.popular_tags_map;
+  let similar_shopper_lists = req.body.similar_shopper_lists;
+  let popular_tags_calls = [];
+  let start_index = req.body.start_index;
+  let similar_shopper_searches_map = new Map();
+  for (let j = start_index; j < start_index+10; j++) {
+
+    if (!similar_shopper_searches_map.has(similar_shopper_lists[j].toLowerCase())) {
+      
+      let tag_properties = {
+        count: map.get(similar_shopper_lists[j]),
+        price: 0,
+        photos: 0,
+        views: 0,
+        num_favorers: 0,
+        long_tail: false,
+        days_to_ship: 0,
+      }
+      similar_shopper_searches_map.set(similar_shopper_lists[j].toLowerCase(), tag_properties);
+
+      popular_tags_calls.push(tag_listing.getTagListing(similar_shopper_lists[j].toLowerCase(), api_keys[1]).then(response => {
+        // console.log(` hello ${JSON.stringify(response)}`)
+        if (response.status == 200) {
+          // console.log(response)
+          let tag_properties = similar_shopper_searches_map.get(similar_shopper_lists[j].toLowerCase());
+          tag_properties.price += parseFloat(response.result.average_price);
+          tag_properties.photos += response.result.photos
+          tag_properties.views += response.result.searches;
+          tag_properties.num_favorers += parseInt(response.result.favourites);
+          tag_properties.long_tail = similar_shopper_lists[j].toLowerCase().indexOf(' ') >= 3;
+          if (response.result.min_max_shipping_days != null) {
+            tag_properties.days_to_ship = response.result.min_max_shipping_days;
+          }
+          similar_shopper_searches_map.set(similar_shopper_lists[j].toLowerCase(), tag_properties);
+
+        }
+      }))
+
+      // await Promise.race(popular_tags_calls);
+    }
+
+  }
+
+  await Promise.all(popular_tags_calls)
+
+  let response = {
+    status: 200,
+    similar_shopper_searches_map: Array.from(similar_shopper_searches_map.entries())
+  }
+  res.status(response.status).end(JSON.stringify(response));
+});
+
+
+
+app.get('/nextLongTailAlternativeTags', auth, async (req, res) => {
+  let map = req.body.popular_tags_map;
+  let long_tail_alternative_list = req.body.similar_shopper_lists;
+  let start_index = req.body.start_index;
+  let long_tail_alternatives_map = new Map();
+  let popular_tags_calls = [];
+  for (let j = start_index; j < start_index+10; j++) {
+
+    if (!long_tail_alternatives_map.has(long_tail_alternative_list[j].toLowerCase())) {
+      
+      let tag_properties = {
+        
+        count: map.get(long_tail_alternative_list[j]),
+        price: 0,
+        photos: 0,
+        views: 0,
+        num_favorers: 0,
+        long_tail: false,
+        days_to_ship: 0,
+      }
+      long_tail_alternatives_map.set(long_tail_alternative_list[j].toLowerCase(), tag_properties);
+
+      popular_tags_calls.push(tag_listing.getTagListing(long_tail_alternative_list[j].toLowerCase(), api_keys[2]).then(response => {
+        // console.log(` hello ${JSON.stringify(response)}`)
+        if (response.status == 200) {
+          // console.log(response)
+          let tag_properties = long_tail_alternatives_map.get(long_tail_alternative_list[j].toLowerCase());
+          tag_properties.price += parseFloat(response.result.average_price);
+          tag_properties.photos += response.result.photos
+          tag_properties.views += response.result.searches;
+          tag_properties.num_favorers += parseInt(response.result.favourites);
+          tag_properties.long_tail = long_tail_alternative_list[j].toLowerCase().indexOf(' ') >= 3;
+          if (response.result.min_max_shipping_days != null) {
+            tag_properties.days_to_ship = response.result.min_max_shipping_days;
+          }
+          long_tail_alternatives_map.set(long_tail_alternative_list[j].toLowerCase(), tag_properties);
+        }
+      }))
+
+      // await Promise.race(popular_tags_calls);
+    }
+  }
+  await Promise.all(popular_tags_calls)
+  let response = {
+    status: 200,
+    long_tail_alternatives_map: Array.from(long_tail_alternatives_map.entries())
+  }
+  res.status(response.status).end(JSON.stringify(response));
+});
+
+
+app.get('/nextPopularTags', auth, async (req, res) => {
+  let map = req.body.popular_tags_list_map;
+  let start_index = req.body.start_index;
+  var tag_listing = new TagListing;
+  let popular_tags_map = new Map();
+  let popular_tags_calls = [];
+  let keys = Array.from(map.keys());
+  // console.log(mapSort1)
+  for (let j = 0; j < 10; j++) {
+    // console.log(key.toLowerCase())
+    if (!popular_tags_map.has(keys[j].toLowerCase())) {
+      let tag_properties = {
+        count: map.get(keys[j].toLowerCase()),
+        price: 0,
+        photos: 0,
+        views: 0,
+        num_favorers: 0,
+        long_tail: false,
+        days_to_ship: 0,
+      }
+      popular_tags_map.set(keys[j].toLowerCase(), tag_properties);
+      // console.log(key.toLowerCase())
+      popular_tags_calls.push(tag_listing.getTagListing(keys[j].toLowerCase(), api_keys[0]).then(response => {
+        // console.log(` hello ${JSON.stringify(response)}`)
+        if (response.status == 200) {
+          // console.log(response)
+          let tag_properties = popular_tags_map.get(keys[j].toLowerCase());
+          tag_properties.price += parseFloat(response.result.average_price);
+          tag_properties.photos += response.result.photos
+          tag_properties.views += response.result.searches;
+          tag_properties.num_favorers += parseInt(response.result.favourites);
+          tag_properties.long_tail = keys[j].toLowerCase().indexOf(' ') >= 3;
+          if (response.result.min_max_shipping_days != null) {
+            tag_properties.days_to_ship = response.result.min_max_shipping_days;
+          }
+          popular_tags_map.set(keys[j].toLowerCase(), tag_properties);
+        }
+      }))
+
+      // await Promise.race(popular_tags_calls);
+    }
+    _count = _count + 1;
+    // console.log(_count)
+    if (_count == 10) {
+      break;
+    }
+  }
+  await Promise.all(popular_tags_calls)
+  let response = {
+    status: 200,
+    popular_tags_map: Array.from(popular_tags_map.entries())
+  }
+  res.status(response.status).end(JSON.stringify(response));
+});
+
+
+
+app.post('/registerForNewsAndUpdates', async (req, res) => {
+  let email = req.body.email;
+  var LoginOrSignUp = require("./login_or_signup.js");
+  var john = new LoginOrSignUp();
+  let is_single_listing = false;
+  let response = await john.getListing(req.params.keyword, req.user.user, is_single_listing);
+  res.status(response.status).end(JSON.stringify(response));
+});
 
 app.get('/getHistory', auth, async (req, res) => {
   var History = require("./history.js");
@@ -68,10 +415,17 @@ app.get('/me', auth, async (req, res) => {
   var john = new LoginOrSignUp();
   let response = await john.getUserProfile(req.user.user,);
   let img_response = await john.getImage(req.user.user);
+  let stripe_response = await john.getStripeData(req.user.user);
+
   if (img_response.status == 200) {
     if (img_response.image_data)
       response.user_info['image_url'] = img_response.image_data.file_path;
+  }
 
+  if (stripe_response.status == 200) {
+    response.user_info['customer_id'] = stripe_response.customer_id;
+    response.user_info['subscription_id'] = stripe_response.subscription_id;
+    response.user_info['subscription_status'] = stripe_response.subscription_status;
   }
   res.status(response.status).end(JSON.stringify(response));
 });
@@ -82,7 +436,6 @@ app.get('/generateEmail', auth, async (req, res) => {
   let response = await john.generateEmail(req.user.user, req.query.text, req.query.html, req.query.subject);
   res.status(response.status).end(JSON.stringify(response));
 });
-
 
 app.get('/signIn', async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js");
@@ -97,6 +450,8 @@ app.get('/signIn', async (req, res) => {
   }
   res.status(response.status).end(JSON.stringify(response));
 });
+
+
 
 
 app.post('/changePassword', auth, async (req, res) => {
@@ -144,8 +499,6 @@ app.post('/updateProfile', auth, upload.single('image'), async (req, res) => {
     };
     await john.saveImage(req.user.user, image)
   }
-
-
   let response = await john.updateProfile(
     req.user.user, req.body.name, req.body.date_of_birth,
     req.body.country, req.body.contact_no,);
@@ -153,22 +506,28 @@ app.post('/updateProfile', auth, upload.single('image'), async (req, res) => {
 });
 
 
+// "city": "",
+// "street": "",
+// "postal_code": "",
+// "state": ""
+
 app.get('/signUp', async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js");
   var john = new LoginOrSignUp();
   let response = await john.saveUser(
     req.query.email, req.query.password, req.query.is_subscribed,
-    req.query.country, req.query.name);
+    req.query.country, req.query.name, req.query.city, 
+    req.query.street, req.query.postal_code, req.query.state);
   console.log(response)
   res.status(response.status).end(JSON.stringify(response));
   console.log(res)
 });
 
-
 app.get('/forgotPassword', async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js");
   var john = new LoginOrSignUp();
   let response = await john.forgotPassword(req.query.email);
+  console.log(response)
   res.status(response.status).end(JSON.stringify(response));
 });
 
@@ -181,12 +540,8 @@ app.post('/verifyCode', forgotAuthPasswordToken, async (req, res) => {
   var john = new LoginOrSignUp();
   console.log(req.body)
   const { otp } = req.body;
-  // console.log(otp)
-  // console.log(req.user)
   let user_info_response = await john.getUserToken(req.user.user);
-  // console.log(user_info_response)
   if (user_info_response.status == 200) {
-    // console.log(user_info_response)
     let response = validateCode(otp, user_info_response.user_info);
     if (response.status == 200) {
       let tokenGenerator = new GenerateToken();
@@ -195,11 +550,8 @@ app.post('/verifyCode', forgotAuthPasswordToken, async (req, res) => {
       await john.updateOtpExpiration(req.user.user, "Y");
     }
   }
-  // console.log(response)
   res.status(response.status).end(JSON.stringify(response));
 });
-
-
 
 app.post('/updateSubsciption', auth, async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js");
@@ -208,15 +560,15 @@ app.post('/updateSubsciption', auth, async (req, res) => {
   res.status(response.status).end(JSON.stringify(response));
 });
 
-app.get('/getSingleListing/:listing_id',
+app.get('/getSingleListing',
   auth,
   async (req, res) => {
+  let string = req.body.listing_id;
     var SingleListing = require("./single_listing.js");
     var john = new SingleListing();
-    let response = await john.getSingleListing(req.params.listing_id);
+    let response = await john.getSingleListing(string);
     res.status(response.status).end(JSON.stringify(response));
   });
-
 
 app.get('/calculateProfit', auth, async (req, res) => {
   var ProfitCalculator = require("./profit_calculator.js");
@@ -227,7 +579,6 @@ app.get('/calculateProfit', auth, async (req, res) => {
     parseFloat(req.query.offside_ads_fee_per));
   res.status(response.status).end(JSON.stringify(response));
 });
-
 
 app.get('/calenderHolidays', auth, async (req, res) => {
   var CalenderHolidays = require("./calender_holiday.js");
@@ -250,9 +601,9 @@ app.get("/refreshToken", authRefreshToken, (req, res) => {
   res.status(200).json({ accessToken: response.access_token, refreshToken: response.refresh_token })
 });
 
-app.get("/me", auth, async (req, res) => {
-  res.status(200).json(req.user.user)
-});
+// app.get("/me", auth, async (req, res) => {
+//   res.status(200).json(req.user.user)
+// });
 
 app.post("/deleteAccount", auth, async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js");
@@ -283,6 +634,7 @@ function validateCode(otp, user_info_response) {
     }
   }
 }
+
 
 // app.delete("/logout", auth, (req, res) => {
 //   res.end("log out");
