@@ -16,7 +16,7 @@ let uri =
 // authSource=${authSource}&authMechanism=${authMechanism}
 const client = new MongoClient(uri);
 
-const access_token = '8966655804195cffb113';
+// const access_token = '8966655804195cffb113';
 
 var method = History.prototype;
 
@@ -33,44 +33,35 @@ function History() { }
 method.getHistoricalMetrices = async function (searchKeyWord) {
   let response;
   try {
-    // payload.kw.push(searchKeyWord);
-    // return axios.post('https://api.keywordseverywhere.com/v1/get_keyword_data',
-    //   qs.stringify(payload),
-    //   {
-    //     headers: {
-    //       'Accept': 'application/json',
-    //       'Authorization': `Bearer ${access_token}`
-    //     }
-    //   })
-    //   .then(response => response.data)
-    //   .catch(error => {
-    //     return response = {
-    //       status: 500,
-    //       error_msg: error,
-    //     }
-    //   });
+
     let startTime = new Date(Date.now() - 31556926 * 1000.0)
     startTime.setHours(0);
     startTime.setMinutes(0);
     startTime.setSeconds(0);
     startTime.setMilliseconds(0);
-    console.log(startTime.toISOString())
+    // console.log(startTime.toISOString())
 
-    response = await googleTrends.interestOverTime({ keyword: searchKeyWord, startTime: startTime }, function (err, results) {
+    await googleTrends.interestOverTime({ keyword: searchKeyWord, startTime: startTime }, function (err, results) {
       if (err) {
-        return response = {
+        console.log(err)
+        response = {
           status: 500,
           error_msg: err,
         };
       }
       else {
+        console.log(results)
         let json_results = JSON.parse(results);
-        // console.log(JSON.parse(results))
-        return json_results.default;
+        console.log(JSON.parse(results))
+        response = {
+          status: 200,
+          stats: json_results.default
+        }
+        // return json_results.default;
       };
     });
   } catch (e) {
-    return response = {
+    response = {
       status: 500,
       error_msg: e,
     }

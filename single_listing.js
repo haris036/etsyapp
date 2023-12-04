@@ -1,8 +1,10 @@
 const fetch = require("node-fetch");
+require('dotenv').config()
 const fs = require('fs');
 const Listing = require("./listing.js");
 let api_key_info = JSON.parse(fs.readFileSync("api_key.json"));
 var myHeaders = new fetch.Headers();
+const api_keys = process.env.API_KEYS.split(',')
 
 // const { MongoClient } = require("mongodb");
 // const username = encodeURIComponent("harisarif103");
@@ -18,7 +20,7 @@ var myHeaders = new fetch.Headers();
 
 // const client = new MongoClient(uri);
 
-myHeaders.append("x-api-key", "7vudmbql4ympd8mrzsajli9n");
+myHeaders.append("x-api-key", api_keys[0]);
 var method = SingleListing.prototype;
 function SingleListing() { }
 var requestOptions = {
@@ -26,9 +28,18 @@ var requestOptions = {
     headers: myHeaders,
     redirect: 'follow'
   };
-method.getSingleListing = async function (listing_id) {
+method.getSingleListing = async function (string) {
     var items = [];
-
+    console.log(api_keys)
+    console.log(string)
+    let listing_id;
+    if (!isNaN(string)){
+        listing_id = string;
+    } else {
+        let urlString = new URL(string);
+        listing_id = urlString.pathname.split('/')[2];
+    }
+    console.log(listing_id)
     var listings = new Listing();
     const url = (
         'https://openapi.etsy.com/v3/application/listings/' + listing_id + '?' +
@@ -41,12 +52,13 @@ method.getSingleListing = async function (listing_id) {
 
 
 
-    response = await fetch(url, requestOptions);
-    let result = await response.json();
+    let _response = await fetch(url, requestOptions);
+    
     // console.log(result);
     var tags_call = [];
     var tags_data = [];
-    if (response.status == 200) {
+    if (_response.status == 200) {
+        let result = await _response.json();
         var current_time = Date.now();
         current_time = Math.round(current_time / 1000);
         var shipping_infos = [];
@@ -80,31 +92,33 @@ method.getSingleListing = async function (listing_id) {
             shipping_infos.push(shipping_info);
         }
         let is_single_listing = true;
+        let count = 1;
+        let api_index = 0;
         for (let j = 0; j < result.tags.length; j++) {
-            // sleep(300);
-            tags_call.push( listings.getListing( result.tags[j], null, is_single_listing).then(response => {
-                // console.log(response);
+            if (count%10 == 0){
+                api_index=api_index+1;
+            }
+            console.log(result.tags[j])
+            tags_call.push( listings.getListing( result.tags[j], null, is_single_listing, api_keys[api_index]).then(response => {
+                // console.log(response)
                 let  tag_properties = {
-                    name: result.tags[j],
-                    searches: response.searches,
-                    competition: response.competition,
+                    name: response.result.name,
+                    searches: response.result.searches,
+                    competition: response.result.competition,
                     is_in_title: result.title.toLowerCase().includes(result.tags[j]),
                     is_in_description: result.description.toLowerCase().includes(result.tags[j]),
-                    long_tail: result.tags[j].toLowerCase().indexOf(' ') >= 2,
-                    favourites: response.favourites,
-                    average_price: response.average_price,
+                    long_tail: result.tags[j].toLowerCase().indexOf(' ') >= 3,
+                    favourites: response.result.favourites,
+                    average_price: response.result.average_price,
                 };
-                
+                console.log(response.result.name)
                 tags_data.push(tag_properties);
-
             }));
-            // if (j % 9 == 0){
-            //     await Promise.all(tags_call);
-            //     tags_call.splice(0, tags_call.length);
-            // }
+            count=count+1;
         }
 
         await Promise.all(tags_call);
+        // console.log("Hello")
         let item = {
             listing_id: result.listing_id,
             title: result.title,
@@ -147,8 +161,8 @@ method.getSingleListing = async function (listing_id) {
 
     } else {
         let response = {
-            status: 200,
-           error_msg: `Error in getting results received respose code: ${response.status} response description: ${response.statusText}`,
+            status: 500,
+           error_msg: `Error in getting results received respose code: ${_response.status} response description: ${_response.statusText}`,
         };
         // console.log(shipping_day_prices);
         return response;

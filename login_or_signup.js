@@ -14,7 +14,7 @@ let uri = `mongodb+srv://${username}:${password}@${cluster}/?retryWrites=true&w=
 const client = new MongoClient(uri);
 
 
-method.saveUser = async function (_email, _password, _is_subscribed, _country, _name) {
+method.saveUser = async function (_email, _password, _is_subscribed, _country, _name, _city, _street, _postal_code, _state) {
   let usr = "";
   let insert_id = "";
   try {
@@ -35,7 +35,11 @@ method.saveUser = async function (_email, _password, _is_subscribed, _country, _
       is_subscribed: _is_subscribed,
       last_updated: null,
       expiry: Date.now() + 2592000,
-      subscribed_date: Date.now()
+      subscribed_date: Date.now(),
+      city: _city,
+      street: _street,
+      postal_code: _postal_code,
+      state: _state,
     };
     const result = await collection.insertOne(doc);
 
@@ -227,6 +231,7 @@ method.getUser = async function (_email, _password) {
     }
     console.log(user_info)
   } catch (e) {
+    console.log(e)
     let response = {
       status: 500,
       error_msg: e,
@@ -277,6 +282,10 @@ method.getUserProfile = async function (_email,) {
       contact_no: user_data.contact_no ? user_data.contact_no : null,
       country: user_data.country ? user_data.country : null,
       date_of_birth: user_data.date_of_birth ? user_data.date_of_birth : null,
+      city: user_data.city ? user_data.city : null,
+      street: user_data.street ? user_data.street : null,
+      postal_code: user_data.postal_code ? user_data.postal_code : null,
+      state: user_data.state ? user_data.state : null,
     }
   }
   return response;
@@ -369,9 +378,7 @@ method.updateDateOfBirth = async function (_email, _date_of_birth) {
     }
     return response;
   } finally {
-
     await client.close();
-
   }
 
   let response = {
@@ -543,6 +550,136 @@ method.deleteAccount = async function (_email,) {
   return response;
 }
 
+method.saveStripeUser = async function(email, custome_id) {
+  try {
+
+    await client.connect();
+    var dbo = client.db("etsy_database");
+    var query = { email: email };
+    var doc = {
+      email: email,
+      custome_id: custome_id,
+    };
+    await dbo.collection("stripe_data").replaceOne(query, doc, { upsert: true });
+  } catch (e) {
+    console.log(e)
+    let response = {
+      status: 500,
+      error_msg: e,
+    }
+    return response;
+  } finally {
+
+    await client.close();
+
+  }
+
+  let response = {
+    status: 200,
+    msg: "Stripe data created",
+  }
+
+  return response;
+}
+
+
+method.updateStripeSubscriptionIdAndStatus = async function( subscription_id, status) {
+  try {
+
+    await client.connect();
+    var dbo = client.db("etsy_database");
+    var query = { subscription_id: subscription_id };
+    var doc = {
+      status: status,
+    };
+    await dbo.collection("stripe_data").updateOne(query, doc, { upsert: true });
+  } catch (e) {
+    console.log(e)
+    let response = {
+      status: 500,
+      error_msg: e,
+    }
+    return response;
+  } finally {
+
+    await client.close();
+
+  }
+
+  let response = {
+    status: 200,
+    msg: "Stripe session updated",
+  }
+
+  return response;
+}
+
+
+method.updateStripeSubscriptionStatus = async function(subscription_id, status) {
+  try {
+
+    await client.connect();
+    var dbo = client.db("etsy_database");
+    var query = { subscription_id: subscription_id };
+    var doc = {
+      status: status,
+    };
+    await dbo.collection("stripe_data").updateOne(query, doc, { upsert: true });
+  } catch (e) {
+    console.log(e)
+    let response = {
+      status: 500,
+      error_msg: e,
+    }
+    return response;
+  } finally {
+
+    await client.close();
+
+  }
+
+  let response = {
+    status: 200,
+    msg: "Stripe session updated",
+  }
+
+  return response;
+}
+
+method.getStripeData = async function (_email,) {
+
+  let stripe_data;
+  try {
+
+    await client.connect();
+
+    const database = client.db("etsy_database");
+    const users = database.collection("stripe_data");
+    stripe_data = await users.findOne({ email: _email });
+  } catch (e) {
+    let response = {
+      status: 500,
+      error_msg: e,
+    }
+    return response;
+
+  } finally {
+
+    await client.close();
+
+  }
+  let response = {
+    status: 200,
+    stripe_info: {
+      email: stripe_data.email,
+      customer_id: stripe_data.customer_id,
+      subscrption_id: stripe_data.subscribtion_id,
+      subscribtion_status: stripe_data.subscribtion_status,
+    } 
+  }
+  return response;
+}
+
 method.forgotPassword = async function (_email,) {
 
   let user_info;
@@ -558,7 +695,7 @@ method.forgotPassword = async function (_email,) {
         status: 404,
         error_msg: "No user found",
       };
-      return response;    
+      return response;
     }
     var tokenGenerator = new GenerateToken();
     let response = tokenGenerator.getResetPasswordToken(_email);
@@ -585,7 +722,7 @@ method.forgotPassword = async function (_email,) {
 
     await tokens.replaceOne(query, doc, { upsert: true });
 
-    let link = "https://craftypro.co/auth/forgot-password?token=" + encodeURIComponent(user_info.access_token);
+    let link = "https://craftypro.co/auth/forgot-password?token=" + encodeURIComponent(user_info.access_token,true);
     link = link + "\n";
     link = link + "Otp: " + otpGenerated;
 
@@ -605,6 +742,37 @@ method.forgotPassword = async function (_email,) {
   let response = {
     status: 200,
     msg: "Email generated",
+  }
+  return response;
+}
+
+
+method.registerForNewsAndUpdates = async function (email,) {
+
+  let user_info;
+  try {
+
+    await client.connect();
+    var dbo = client.db("etsy_database");
+    var query = { email: email };
+    var doc = {
+      email: email,
+    };
+    await dbo.collection("emails_data").replaceOne(query, doc, { upsert: true });
+
+  } catch (e) {
+    console.log(e)
+    let response = {
+      status: 500,
+      error_msg: e,
+    }
+    return response;
+  } finally {
+    await client.close();
+  }
+  let response = {
+    status: 200,
+    msg: "Email registered",
   }
   return response;
 }
