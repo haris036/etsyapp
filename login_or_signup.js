@@ -650,17 +650,19 @@ method.getStripeData = async function (_email,) {
 
   let stripe_data;
   try {
-
+    
     await client.connect();
 
     const database = client.db("etsy_database");
     const users = database.collection("stripe_data");
     stripe_data = await users.findOne({ email: _email });
+    console.log(stripe_data)
   } catch (e) {
     let response = {
       status: 500,
       error_msg: e,
     }
+    console.log(stripe_data)
     return response;
 
   } finally {
