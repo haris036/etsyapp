@@ -18,8 +18,10 @@ const cors = require("cors");
 var multer = require('multer');
 var path = require('path');
 var bodyParser = require('body-parser');
+const api_keys = process.env.API_KEYS.split(',')
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const TagListing = require("./tags_listing.js");
+
 // console.log(process.env.API_KEYS)
 var storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -232,15 +234,21 @@ app.get('/getListing/:keyword', auth, async (req, res) => {
 
 
 app.get('/nextSimilarShopperTags', auth, async (req, res) => {
-  let map = req.body.popular_tags_map;
+  let map = new Map(Object.entries(req.body.popular_tags_list_map));
   let similar_shopper_lists = req.body.similar_shopper_lists;
   let popular_tags_calls = [];
   let start_index = req.body.start_index;
   let similar_shopper_searches_map = new Map();
-  for (let j = start_index; j < start_index+10; j++) {
+  let ending_index = start_index+10;
+  var tag_listing = new TagListing;
+  if (ending_index > similar_shopper_lists.length) {
+    ending_index = similar_shopper_lists.length;
+  }
+
+  for (let j = start_index; j < start_index + 10; j++) {
 
     if (!similar_shopper_searches_map.has(similar_shopper_lists[j].toLowerCase())) {
-      
+
       let tag_properties = {
         count: map.get(similar_shopper_lists[j]),
         price: 0,
@@ -287,17 +295,24 @@ app.get('/nextSimilarShopperTags', auth, async (req, res) => {
 
 
 app.get('/nextLongTailAlternativeTags', auth, async (req, res) => {
-  let map = req.body.popular_tags_map;
-  let long_tail_alternative_list = req.body.similar_shopper_lists;
+  let map = new Map(Object.entries(req.body.popular_tags_list_map));
+  let long_tail_alternative_list = req.body.long_tail_alternative_list;
   let start_index = req.body.start_index;
+  var tag_listing = new TagListing;
   let long_tail_alternatives_map = new Map();
   let popular_tags_calls = [];
-  for (let j = start_index; j < start_index+10; j++) {
+  console.log(req.body)
+  // console.log(long_tail_alternative_list)
+  let ending_index = start_index+10;
+  if (ending_index > long_tail_alternative_list.length) {
+    ending_index = long_tail_alternative_list.length;
+  }
+  for (let j = start_index; j < ending_index; j++) {
 
     if (!long_tail_alternatives_map.has(long_tail_alternative_list[j].toLowerCase())) {
-      
+
       let tag_properties = {
-        
+
         count: map.get(long_tail_alternative_list[j]),
         price: 0,
         photos: 0,
@@ -309,9 +324,7 @@ app.get('/nextLongTailAlternativeTags', auth, async (req, res) => {
       long_tail_alternatives_map.set(long_tail_alternative_list[j].toLowerCase(), tag_properties);
 
       popular_tags_calls.push(tag_listing.getTagListing(long_tail_alternative_list[j].toLowerCase(), api_keys[2]).then(response => {
-        // console.log(` hello ${JSON.stringify(response)}`)
         if (response.status == 200) {
-          // console.log(response)
           let tag_properties = long_tail_alternatives_map.get(long_tail_alternative_list[j].toLowerCase());
           tag_properties.price += parseFloat(response.result.average_price);
           tag_properties.photos += response.result.photos
@@ -324,11 +337,10 @@ app.get('/nextLongTailAlternativeTags', auth, async (req, res) => {
           long_tail_alternatives_map.set(long_tail_alternative_list[j].toLowerCase(), tag_properties);
         }
       }))
-
-      // await Promise.race(popular_tags_calls);
     }
   }
   await Promise.all(popular_tags_calls)
+  // console.log(long_tail_alternatives_map)
   let response = {
     status: 200,
     long_tail_alternatives_map: Array.from(long_tail_alternatives_map.entries())
@@ -338,14 +350,23 @@ app.get('/nextLongTailAlternativeTags', auth, async (req, res) => {
 
 
 app.get('/nextPopularTags', auth, async (req, res) => {
-  let map = req.body.popular_tags_list_map;
+  // console.log(req.body)
+  let map = new Map(Object.entries(req.body.popular_tags_list_map));
+  // console.log(map)
   let start_index = req.body.start_index;
   var tag_listing = new TagListing;
   let popular_tags_map = new Map();
   let popular_tags_calls = [];
+  // console.log(map.keys())
   let keys = Array.from(map.keys());
+  let ending_index = start_index+10;
+  console.log(ending_index)
+  if (ending_index > keys.length) {
+    ending_index = keys.length;
+  }
+  console.log(ending_index)
   // console.log(mapSort1)
-  for (let j = 0; j < 10; j++) {
+  for (let j = start_index; j < ending_index; j++) {
     // console.log(key.toLowerCase())
     if (!popular_tags_map.has(keys[j].toLowerCase())) {
       let tag_properties = {
@@ -378,11 +399,7 @@ app.get('/nextPopularTags', auth, async (req, res) => {
 
       // await Promise.race(popular_tags_calls);
     }
-    _count = _count + 1;
-    // console.log(_count)
-    if (_count == 10) {
-      break;
-    }
+
   }
   await Promise.all(popular_tags_calls)
   let response = {
@@ -416,16 +433,17 @@ app.get('/me', auth, async (req, res) => {
   let response = await john.getUserProfile(req.user.user,);
   let img_response = await john.getImage(req.user.user);
   let stripe_response = await john.getStripeData(req.user.user);
-
+  console.log(img_response)
   if (img_response.status == 200) {
     if (img_response.image_data)
-      response.user_info['image_url'] = img_response.image_data.file_path;
+      response.user_info['image_url'] = img_response.image_data.file_path ? img_response.image_data.file_path : null;
   }
 
   if (stripe_response.status == 200) {
-    response.user_info['customer_id'] = stripe_response.customer_id;
-    response.user_info['subscription_id'] = stripe_response.subscription_id;
-    response.user_info['subscription_status'] = stripe_response.subscription_status;
+    response.user_info['customer_id'] = stripe_response.stripe_info.customer_id ? stripe_response.stripe_info.customer_id : null;
+    response.user_info['subscription_id'] = stripe_response.stripe_info.subscription_id ? stripe_response.stripe_info.subscription_id : null;
+    response.user_info['subscription_status'] = stripe_response.stripe_info.subscription_status ? stripe_response.stripe_info.subscription_status : null;
+
   }
   res.status(response.status).end(JSON.stringify(response));
 });
@@ -514,11 +532,61 @@ app.post('/updateProfile', auth, upload.single('image'), async (req, res) => {
 app.get('/signUp', async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js");
   var john = new LoginOrSignUp();
-  let response = await john.saveUser(
+  
+  try {
+    const customer = await stripe.customers.create
+    ({
+      email
+        : req.query.email,
+      name
+        : req.query.name,
+      shipping
+        : {
+        address
+          : {
+          city
+            : req.query.city,
+          country
+            : req.query.country,
+          line1
+            : req.query.street,
+          postal_code
+            : req.query.postal_code,
+          state
+            : req.query.state,
+        },
+        name: req.query.name,
+      },
+      address
+        : {
+        city
+          : req.query.city,
+        country
+          : req.query.country,
+        line1
+          : req.query.street,
+        postal_code
+          : req.query.postal_code,
+        state
+          : req.query.state,
+      },
+    });
+  
+    var john = new LoginOrSignUp();
+    let response_stripe = await john.saveStripeUser(req.user.user, customer.id);
+    let response = await john.saveUser(
     req.query.email, req.query.password, req.query.is_subscribed,
-    req.query.country, req.query.name, req.query.city, 
+    req.query.country, req.query.name, req.query.city,
     req.query.street, req.query.postal_code, req.query.state);
-  console.log(response)
+  
+    if (response_stripe.status != 200) {
+      return res.status(response.status).send(response);
+    }
+
+    response["customer_id"] = customer.id;
+  } catch (e) {
+    return res.status(500).send(e);
+  }
   res.status(response.status).end(JSON.stringify(response));
   console.log(res)
 });
@@ -563,7 +631,7 @@ app.post('/updateSubsciption', auth, async (req, res) => {
 app.get('/getSingleListing',
   auth,
   async (req, res) => {
-  let string = req.body.listing_id;
+    let string = req.body.listing_id;
     var SingleListing = require("./single_listing.js");
     var john = new SingleListing();
     let response = await john.getSingleListing(string);
