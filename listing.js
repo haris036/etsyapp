@@ -5,7 +5,7 @@ const History = require("./history.js");
 let api_key_info = JSON.parse(fs.readFileSync("api_key.json"));
 const { MongoClient } = require("mongodb");
 const { count } = require("console");
-const TagListing = require("./tags_listing.js");
+// const TagListing = require("./tags_listing.js");
 const username = encodeURIComponent("harisarif103");
 const api_keys = process.env.API_KEYS.split(',')
 const password = encodeURIComponent("Temp.123");
@@ -52,7 +52,13 @@ method.getListing = async function (searchKeyWord, email, is_single_listing, api
 
   );
 
+  let categories_map = await get_categories();
+
+
+
   console.log(is_single_listing)
+
+
   try {
     var history = new History();
     var historical_metrices;
@@ -64,7 +70,7 @@ method.getListing = async function (searchKeyWord, email, is_single_listing, api
     let sum_of_time_lines = 0;
     let date_of_timelines = "";
     let trend;
-    let long_tail_alternative_list = [];
+    // let long_tail_alternative_list = [];
     let images_array = [];
     let history_call = !is_single_listing ? (history.getHistoricalMetrices(searchKeyWord).then(response => {
       console.log(response)
@@ -114,9 +120,9 @@ method.getListing = async function (searchKeyWord, email, is_single_listing, api
     let results = await response.json();
     let long_tail_keyword = searchKeyWord.indexOf(' ') >= 3;
     var listing_ids = [];
+    let competition = 0;
     if (response.status == 200) {
-      var length = results.results.length;
-      var competition = results.count;
+      competition = results.count;
       for (let item of results.results) {
         listing_ids.push(item.listing_id)
       }
@@ -141,12 +147,12 @@ method.getListing = async function (searchKeyWord, email, is_single_listing, api
     if (response.status == 200) {
 
       // let popular_tags_array = [];
-      let popular_tags_calls = [];
-      var similar_shopper_lists = [];
-      let popular_tags_map = new Map();
+      // let popular_tags_calls = [];
+      // var similar_shopper_lists = [];
+      // let popular_tags_map = new Map();
       let shipping_prices_map = new Map();
       let shipping_days_map = new Map();
-      let tag_list_map = new Map();
+      // let tag_list_map = new Map();
       let shipping_day_prices = {
         minimum_price: null,
         average_price: null,
@@ -155,19 +161,19 @@ method.getListing = async function (searchKeyWord, email, is_single_listing, api
         average_days: null,
         maximum_days: null,
       }
-      let tag_lists = [];
-      let tag_calls;
+      // let tag_lists = [];
+      // let tag_calls;
       var shipping_days_count = 0;
       var shipping_prices_count = 0;
       var sum_of_days = 0;
       var sum_of_prices = 0.0;
-      var long_tail_alternatives_map = new Map();
+      // var long_tail_alternatives_map = new Map();
       let views_lists = [];
       let min_max_shipping_days_lists = [];
       let item_pricing = new Map();
       var current_time = Date.now();
       var material_wise_items_map = new Map();
-      var similar_shopper_searches_map = new Map();
+      // var similar_shopper_searches_map = new Map();
       current_time = Math.round(current_time / 1000);
       var length = results.results.length;
       let _items = results.results;
@@ -175,7 +181,7 @@ method.getListing = async function (searchKeyWord, email, is_single_listing, api
       console.log(length);
 
       for (let _item of _items) {
-        _count += 1;
+
         var images = [];
         let image_flag = false;
         for (let _image of _item.images) {
@@ -194,8 +200,6 @@ method.getListing = async function (searchKeyWord, email, is_single_listing, api
             image
           );
         }
-
-
         let max_shipping_item_day = null;
         let min_shipping_item_day = null;
         let shipping_day_set = false;
@@ -256,7 +260,7 @@ method.getListing = async function (searchKeyWord, email, is_single_listing, api
           }
         }
         if (!shipping_day_set) {
-          if(!shipping_days_map.has(-1)) {
+          if (!shipping_days_map.has(-1)) {
             shipping_days_map.set(-1, 0)
           }
           let undeclared_shipping_day = shipping_days_map.get(-1);
@@ -264,7 +268,7 @@ method.getListing = async function (searchKeyWord, email, is_single_listing, api
         }
 
         if (!shipping_price_set) {
-          if(!shipping_prices_map.has(-1)) {
+          if (!shipping_prices_map.has(-1)) {
             shipping_prices_map.set(-1, 0)
           }
           let undeclared_shipping_price = shipping_prices_map.get(-1);
@@ -287,18 +291,18 @@ method.getListing = async function (searchKeyWord, email, is_single_listing, api
           images: images,
           views: _item.views,
           creation_time: _item.original_creation_timestamp,
-          category: _item.taxonomy_path,
+          category: _item.taxonomy_id,
           min_max_shipping_days: "",
         };
-        for (let tag of item.tags) {
-          if (!tag_list_map.has(tag.toLowerCase())) {
-            // console.log(tag.toLowerCase())
-            tag_list_map.set(tag.toLowerCase(), 0)
-            tag_lists.push(tag.toLowerCase());
-          }
-          tag_list_map.set(tag.toLowerCase(), tag_list_map.get(tag.toLowerCase()) + 1);
+        // for (let tag of item.tags) {
+        //   if (!tag_list_map.has(tag.toLowerCase())) {
+        //     // console.log(tag.toLowerCase())
+        //     tag_list_map.set(tag.toLowerCase(), 0)
+        //     tag_lists.push(tag.toLowerCase());
+        //   }
+        //   tag_list_map.set(tag.toLowerCase(), tag_list_map.get(tag.toLowerCase()) + 1);
 
-        }
+        // }
         // console.log(tag_list_map)
 
         if (min_shipping_item_day != null) {
@@ -315,29 +319,20 @@ method.getListing = async function (searchKeyWord, email, is_single_listing, api
         if (!is_single_listing) {
           for (let i = 0; i < item.materials.length; i++) {
             if (!material_wise_items_map.has(item.materials[i].toLowerCase())) {
-              material_wise_items_map.set(item.materials[i].toLowerCase(), material_item = {
-                count: 0,
-                minimum_price: null,
-                average_price: 0.0,
-                maximum_price: null,
-                sum_of_prices: 0.0,
+              material_wise_items_map.set(item.materials[i].toLowerCase(), new Map());
+            }
+            let categories = material_wise_items_map.get(item.materials[i].toLowerCase());
+            if (!categories.has(item.category)) {
+              categories.set(categories_map.get(item.category), material_item = {
+                image: images_array[_count],
+                url: item.url,
               });
+            }
+            material_wise_items_map.set(item.materials[i].toLowerCase(), categories)
 
-            }
-            material_item = material_wise_items_map.get(item.materials[i].toLowerCase());
-            material_item.count += 1;
-            views_lists.push(item.views);
-
-            if (material_item.minimum_price == null || material_item.minimum_price > parseFloat(item.price)) {
-              material_item.minimum_price = parseFloat(item.price);
-            }
-            if (material_item.maximum_price == null || material_item.maximum_price < parseFloat(item.price)) {
-              material_item.maximum_price = parseFloat(item.price);
-            }
-            material_item.sum_of_prices += parseFloat(item.price);
           }
         }
-
+        _count += 1;
 
 
         // let counter = 0;
@@ -364,29 +359,31 @@ method.getListing = async function (searchKeyWord, email, is_single_listing, api
 
       let shipping_day_pie_chart_map = createDayPieChartMap(shipping_days_map, shipping_days_count,);
 
-      let mapSort1 = new Map([...tag_list_map.entries()].sort((a, b) => b[1] - a[1]));
+      // let mapSort1 = new Map([...tag_list_map.entries()].sort((a, b) => b[1] - a[1]));
       // console.log(mapSort1)
-      similar_shopper_lists = [...tag_lists].reverse().filter(containSearchKeyword);
-      long_tail_alternative_list = [...tag_lists].reverse().filter(longTail);
-      if (!is_single_listing)
-        await tagCalls(similar_shopper_lists, long_tail_alternative_list, popular_tags_calls, popular_tags_map, long_tail_alternatives_map, similar_shopper_searches_map, mapSort1);
+      // similar_shopper_lists = [...tag_lists].reverse().filter(containSearchKeyword);
+      // long_tail_alternative_list = [...tag_lists].reverse().filter(longTail);
+      // if (!is_single_listing)
+      //   await tagCalls(similar_shopper_lists, long_tail_alternative_list, popular_tags_calls, popular_tags_map, long_tail_alternatives_map, similar_shopper_searches_map, mapSort1);
       shipping_day_prices.average_price = sum_of_prices / shipping_prices_count;
       shipping_day_prices.average_days = sum_of_days / shipping_days_count;
       if (!is_single_listing) {
         await Promise.resolve(history_call);
       }
       // console.log(popular_tags_map)
-      let popular_tags = Array.from(popular_tags_map.entries());
-      console.log(mapSort1)
-      const popular_tags_list_map = Object.fromEntries(mapSort1);
+      // let popular_tags = Array.from(popular_tags_map.entries());
+      // console.log(mapSort1)
+      // const popular_tags_list_map = Object.fromEntries(mapSort1);
       // const popular_tags_list_map = JSON.stringify(obj);
 
       // let popular_tags_list_map = Array.from(mapSort1.entries());
       let shipping_days = Array.from(shipping_days_map.entries());
       let shipping_prices = Array.from(shipping_prices_map.entries());
-      let long_tail_alternatives = Array.from(long_tail_alternatives_map.entries());
-      let material_items = Array.from(material_wise_items_map);
-      let similar_shopper_searches = Array.from(similar_shopper_searches_map.entries());
+      // let long_tail_alternatives = Array.from(long_tail_alternatives_map.entries());
+      // console.log(material_wise_items_map)
+      let material_items = toObject(material_wise_items_map);
+      console.log(material_items)
+      // let similar_shopper_searches = Array.from(similar_shopper_searches_map.entries());
       let shipping_day_pie_chart_data = Array.from(shipping_day_pie_chart_map.entries());
       console.log(shipping_day_pie_chart_data)
       console.log(shipping_prices_pie_chart_map)
@@ -395,7 +392,7 @@ method.getListing = async function (searchKeyWord, email, is_single_listing, api
         status: 200,
         name: searchKeyWord,
         items: items,
-        popular_tags: popular_tags,
+        // popular_tags: popular_tags,
         item_pricing: Array.from(item_pricing.entries()),
         historical_metrices: historical_metrices,
         long_tail_keyword: long_tail_keyword,
@@ -403,18 +400,18 @@ method.getListing = async function (searchKeyWord, email, is_single_listing, api
         shipping_day_prices: shipping_day_prices,
         shipping_prices: shipping_prices,
         shipping_days: shipping_days,
-        long_tail_alternatives: long_tail_alternatives,
+        // long_tail_alternatives: long_tail_alternatives,
         material_items: material_items,
         avg_searches: searches / length,
         searches: searches,
         favourites: favourites,
         average_price: average_price / length,
-        similar_shopper_searches: similar_shopper_searches,
+        // similar_shopper_searches: similar_shopper_searches,
         shipping_day_pie_chart_data: shipping_day_pie_chart_data,
         shipping_prices_pie_chart_data: shipping_prices_pie_chart_data,
-        popular_tags_list_map: popular_tags_list_map,
-        similar_shopper_lists: similar_shopper_lists,
-        long_tail_alternative_list: long_tail_alternative_list,
+        // popular_tags_list_map: popular_tags_list_map,
+        // similar_shopper_lists: similar_shopper_lists,
+        // long_tail_alternative_list: long_tail_alternative_list,
         images: images_array,
       };
 
@@ -480,131 +477,16 @@ function sleep(ms) {
   });
 }
 
-async function tagCalls(similar_shopper_lists, long_tail_alternative_list, popular_tags_calls, popular_tags_map, long_tail_alternatives_map, similar_shopper_searches_map, mapSort1) {
-  let _count = 0;
-  var tag_listing = new TagListing;
-  // console.log(mapSort1)
-  for (let [key, value] of mapSort1.entries()) {
-    // console.log(key.toLowerCase())
-    if (!popular_tags_map.has(key.toLowerCase())) {
-      let tag_properties = {
-        count: value,
-        price: 0,
-        photos: 0,
-        views: 0,
-        num_favorers: 0,
-        long_tail: false,
-        days_to_ship: 0,
-      }
-      popular_tags_map.set(key.toLowerCase(), tag_properties);
-      // console.log(key.toLowerCase())
-      popular_tags_calls.push(tag_listing.getTagListing(key.toLowerCase(), api_keys[0]).then(response => {
-        // console.log(` hello ${JSON.stringify(response)}`)
-        if (response.status == 200) {
-          // console.log(response)
-          let tag_properties = popular_tags_map.get(key.toLowerCase());
-          tag_properties.price += parseFloat(response.result.average_price);
-          tag_properties.photos += response.result.photos
-          tag_properties.views += response.result.searches;
-          tag_properties.num_favorers += parseInt(response.result.favourites);
-          tag_properties.long_tail = key.toLowerCase().indexOf(' ') >= 3;
-          if (response.result.min_max_shipping_days != null) {
-            tag_properties.days_to_ship = response.result.min_max_shipping_days;
-          }
-          popular_tags_map.set(key.toLowerCase(), tag_properties);
-        }
-      }))
 
-      // await Promise.race(popular_tags_calls);
-    }
-    _count = _count + 1;
-    // console.log(_count)
-    if (_count == 10) {
-      break;
-    }
-  }
+const toObject = (map = new Map) =>
+  Array.from
+    ( map.entries()
+    , ([ k, v ]) =>
+        v instanceof Map
+          ? { key: k, value: toObject (v) }
+          : { key: k, value: v }
+    )
 
-  // console.log(similar_shopper_lists)
-  for (let j = 0; j < 10; j++) {
-
-    if (!similar_shopper_searches_map.has(similar_shopper_lists[j].toLowerCase())) {
-
-      let tag_properties = {
-        count: mapSort1.get(similar_shopper_lists[j]),
-        price: 0,
-        photos: 0,
-        views: 0,
-        num_favorers: 0,
-        long_tail: false,
-        days_to_ship: 0,
-      }
-      similar_shopper_searches_map.set(similar_shopper_lists[j].toLowerCase(), tag_properties);
-
-      popular_tags_calls.push(tag_listing.getTagListing(similar_shopper_lists[j].toLowerCase(), api_keys[1]).then(response => {
-        // console.log(` hello ${JSON.stringify(response)}`)
-        if (response.status == 200) {
-          // console.log(response)
-          let tag_properties = similar_shopper_searches_map.get(similar_shopper_lists[j].toLowerCase());
-          tag_properties.price += parseFloat(response.result.average_price);
-          tag_properties.photos += response.result.photos
-          tag_properties.views += response.result.searches;
-          tag_properties.num_favorers += parseInt(response.result.favourites);
-          tag_properties.long_tail = similar_shopper_lists[j].toLowerCase().indexOf(' ') >= 3;
-          if (response.result.min_max_shipping_days != null) {
-            tag_properties.days_to_ship = response.result.min_max_shipping_days;
-          }
-          similar_shopper_searches_map.set(similar_shopper_lists[j].toLowerCase(), tag_properties);
-
-        }
-      }))
-
-      // await Promise.race(popular_tags_calls);
-    }
-
-  }
-  // console.log(long_tail_alternative_list)
-  for (let j = 0; j < 10; j++) {
-
-    if (!long_tail_alternatives_map.has(long_tail_alternative_list[j].toLowerCase())) {
-
-      let tag_properties = {
-
-        count: mapSort1.get(long_tail_alternative_list[j]),
-        price: 0,
-        photos: 0,
-        views: 0,
-        num_favorers: 0,
-        long_tail: false,
-        days_to_ship: 0,
-      }
-      long_tail_alternatives_map.set(long_tail_alternative_list[j].toLowerCase(), tag_properties);
-
-      popular_tags_calls.push(tag_listing.getTagListing(long_tail_alternative_list[j].toLowerCase(), api_keys[2]).then(response => {
-        // console.log(` hello ${JSON.stringify(response)}`)
-        if (response.status == 200) {
-          // console.log(response)
-          let tag_properties = long_tail_alternatives_map.get(long_tail_alternative_list[j].toLowerCase());
-          tag_properties.price += parseFloat(response.result.average_price);
-          tag_properties.photos += response.result.photos
-          tag_properties.views += response.result.searches;
-          tag_properties.num_favorers += parseInt(response.result.favourites);
-          tag_properties.long_tail = long_tail_alternative_list[j].toLowerCase().indexOf(' ') >= 3;
-          if (response.result.min_max_shipping_days != null) {
-            tag_properties.days_to_ship = response.result.min_max_shipping_days;
-          }
-          long_tail_alternatives_map.set(long_tail_alternative_list[j].toLowerCase(), tag_properties);
-        }
-      }))
-
-      // await Promise.race(popular_tags_calls);
-    }
-  }
-  await Promise.all(popular_tags_calls);
-  // console.log(popular_tags_calls)
-}
-// minimum_price: null,
-// average_price: null,
-// maximum_price: null,
 function createPricesPieChartMap(shipping_prices_map, shipping_prices_count,) {
   let _shipping_prices_pie_chart_map = new Map();
   let shipping_prices_pie_chart_map = new Map();
@@ -661,6 +543,45 @@ function createDayPieChartMap(shipping_days_map, shipping_days_count,) {
     shipping_days_pie_chart_map.set(key, percentage)
   }
   return shipping_days_pie_chart_map;
+}
+
+async function get_categories() {
+  var myHeaders = new fetch.Headers();
+
+
+  myHeaders.append("x-api-key", api_keys[1]);
+  var requestOptions = {
+    method: 'GET',
+    headers: myHeaders,
+    redirect: 'follow'
+  };
+  const url = (
+    'https://openapi.etsy.com/v3/application/seller-taxonomy/nodes'
+
+  );
+  let category_map = new Map();
+  let response = await fetch(url, requestOptions);
+
+  let results = await response.json();
+  // console.log(results.results)
+  for (let result of results.results) {
+    category_map.set(result.id, result.name);
+    if (result.children && result.children.length != 0)
+      getChildren(category_map, result)
+
+  }
+  return category_map;
+}
+
+function getChildren(category, result) {
+
+  for (let child of result.children) {
+    category.set(child.id, child.name);
+    if (child.children && child.children.length != 0) {
+      // console.log(result.id)
+      getChildren(category, child)
+    }
+  }
 }
 
 function containSearchKeyword(tag) {
