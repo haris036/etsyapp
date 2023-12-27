@@ -228,7 +228,7 @@ method.getTagListing = async function (searchKeyWord, start_index, option) {
         }
         await Promise.all(popular_tags_calls)
         response['long_tail_alternatives'] = Array.from(long_tail_alternatives_map.entries());
-        response['count'] = long_tail_alternative_list.size;
+        response['count'] = long_tail_alternative_list.length;
       }
       // tagListing()
 
