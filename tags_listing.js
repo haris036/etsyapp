@@ -127,7 +127,7 @@ method.getTagListing = async function (searchKeyWord, start_index, option) {
         }
         await Promise.all(popular_tags_calls)
         response['popular_tags'] = Array.from(popular_tags_map.entries());
-        response['count'] = popular_tags_map.size();
+        response['count'] = keys.length;
       } else if (option == 2) {
         let similar_shopper_lists = [...tag_lists].reverse().filter(containSearchKeyword);
         let ending_index = start_index + 10;
@@ -180,7 +180,7 @@ method.getTagListing = async function (searchKeyWord, start_index, option) {
 
         await Promise.all(popular_tags_calls)
         response['similar_shopper_searches'] = Array.from(similar_shopper_searches_map.entries());
-        response['count'] = similar_shopper_searches_map.size();
+        response['count'] = similar_shopper_lists.length;
 
       } else {
         let long_tail_alternative_list = [...tag_lists].reverse().filter(longTail);
@@ -228,7 +228,7 @@ method.getTagListing = async function (searchKeyWord, start_index, option) {
         }
         await Promise.all(popular_tags_calls)
         response['long_tail_alternatives'] = Array.from(long_tail_alternatives_map.entries());
-        response['count'] = long_tail_alternatives_map.size();
+        response['count'] = long_tail_alternative_list.size;
       }
       // tagListing()
 
