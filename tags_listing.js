@@ -80,7 +80,7 @@ method.getTagListing = async function (searchKeyWord, start_index, option) {
         if (keys.length <= start_index) {
           return response = {
             status: 500,
-            error: `Invalid index provided`,
+            error: `Invalid index provided count  ${keys.length}`,
           };
         }
         let ending_index = start_index + 10;
@@ -134,7 +134,7 @@ method.getTagListing = async function (searchKeyWord, start_index, option) {
         if (similar_shopper_lists.length <= start_index) {
           return response = {
             status: 500,
-            error: `Invalid index provided`,
+            error: `Invalid index provided count  ${similar_shopper_lists.length}`,
           };
         }
         if (ending_index > similar_shopper_lists.length) {
@@ -187,7 +187,7 @@ method.getTagListing = async function (searchKeyWord, start_index, option) {
         if (long_tail_alternative_list.length <= start_index) {
           return response = {
             status: 500,
-            error: `Invalid index provided`,
+            error: `Invalid index provided count  ${long_tail_alternative_list.length}`,
           };
         }
         let ending_index = start_index + 10;
