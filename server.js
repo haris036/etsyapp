@@ -234,179 +234,50 @@ app.get('/getListing/:keyword', auth, async (req, res) => {
 
 
 app.get('/nextSimilarShopperTags', auth, async (req, res) => {
-  let map = new Map(Object.entries(req.body.popular_tags_list_map));
-  let similar_shopper_lists = req.body.similar_shopper_lists;
-  let popular_tags_calls = [];
+  let keyword = req.body.keyword;
   let start_index = req.body.start_index;
-  let similar_shopper_searches_map = new Map();
-  let ending_index = start_index+10;
+  // let ending_index = start_index+10;
   var tag_listing = new TagListing;
-  if (ending_index > similar_shopper_lists.length) {
-    ending_index = similar_shopper_lists.length;
-  }
+  // if (ending_index > similar_shopper_lists.length) {
+  //   ending_index = similar_shopper_lists.length;
+  // }
 
-  for (let j = start_index; j < start_index + 10; j++) {
-
-    if (!similar_shopper_searches_map.has(similar_shopper_lists[j].toLowerCase())) {
-
-      let tag_properties = {
-        count: map.get(similar_shopper_lists[j]),
-        price: 0,
-        photos: 0,
-        views: 0,
-        num_favorers: 0,
-        long_tail: false,
-        days_to_ship: 0,
-      }
-      similar_shopper_searches_map.set(similar_shopper_lists[j].toLowerCase(), tag_properties);
-
-      popular_tags_calls.push(tag_listing.getTagListing(similar_shopper_lists[j].toLowerCase(), api_keys[1]).then(response => {
-        // console.log(` hello ${JSON.stringify(response)}`)
-        if (response.status == 200) {
-          // console.log(response)
-          let tag_properties = similar_shopper_searches_map.get(similar_shopper_lists[j].toLowerCase());
-          tag_properties.price += parseFloat(response.result.average_price);
-          tag_properties.photos += response.result.photos
-          tag_properties.views += response.result.searches;
-          tag_properties.num_favorers += parseInt(response.result.favourites);
-          tag_properties.long_tail = similar_shopper_lists[j].toLowerCase().indexOf(' ') >= 3;
-          if (response.result.min_max_shipping_days != null) {
-            tag_properties.days_to_ship = response.result.min_max_shipping_days;
-          }
-          similar_shopper_searches_map.set(similar_shopper_lists[j].toLowerCase(), tag_properties);
-
-        }
-      }))
-
-      // await Promise.race(popular_tags_calls);
-    }
-
-  }
-
-  await Promise.all(popular_tags_calls)
-
-  let response = {
-    status: 200,
-    similar_shopper_searches_map: Array.from(similar_shopper_searches_map.entries())
-  }
+  let response = await tag_listing.getTagListing(keyword, start_index, 2);
+  console.log(response)
   res.status(response.status).end(JSON.stringify(response));
 });
 
 
 
 app.get('/nextLongTailAlternativeTags', auth, async (req, res) => {
-  let map = new Map(Object.entries(req.body.popular_tags_list_map));
-  let long_tail_alternative_list = req.body.long_tail_alternative_list;
+  let keyword = req.body.keyword;
   let start_index = req.body.start_index;
+  // let ending_index = start_index+10;
   var tag_listing = new TagListing;
-  let long_tail_alternatives_map = new Map();
-  let popular_tags_calls = [];
-  console.log(req.body)
-  // console.log(long_tail_alternative_list)
-  let ending_index = start_index+10;
-  if (ending_index > long_tail_alternative_list.length) {
-    ending_index = long_tail_alternative_list.length;
-  }
-  for (let j = start_index; j < ending_index; j++) {
+  // if (ending_index > similar_shopper_lists.length) {
+  //   ending_index = similar_shopper_lists.length;
+  // }
 
-    if (!long_tail_alternatives_map.has(long_tail_alternative_list[j].toLowerCase())) {
-
-      let tag_properties = {
-
-        count: map.get(long_tail_alternative_list[j]),
-        price: 0,
-        photos: 0,
-        views: 0,
-        num_favorers: 0,
-        long_tail: false,
-        days_to_ship: 0,
-      }
-      long_tail_alternatives_map.set(long_tail_alternative_list[j].toLowerCase(), tag_properties);
-
-      popular_tags_calls.push(tag_listing.getTagListing(long_tail_alternative_list[j].toLowerCase(), api_keys[2]).then(response => {
-        if (response.status == 200) {
-          let tag_properties = long_tail_alternatives_map.get(long_tail_alternative_list[j].toLowerCase());
-          tag_properties.price += parseFloat(response.result.average_price);
-          tag_properties.photos += response.result.photos
-          tag_properties.views += response.result.searches;
-          tag_properties.num_favorers += parseInt(response.result.favourites);
-          tag_properties.long_tail = long_tail_alternative_list[j].toLowerCase().indexOf(' ') >= 3;
-          if (response.result.min_max_shipping_days != null) {
-            tag_properties.days_to_ship = response.result.min_max_shipping_days;
-          }
-          long_tail_alternatives_map.set(long_tail_alternative_list[j].toLowerCase(), tag_properties);
-        }
-      }))
-    }
-  }
-  await Promise.all(popular_tags_calls)
-  // console.log(long_tail_alternatives_map)
-  let response = {
-    status: 200,
-    long_tail_alternatives_map: Array.from(long_tail_alternatives_map.entries())
-  }
+  let response = await tag_listing.getTagListing(keyword, start_index, 3);
   res.status(response.status).end(JSON.stringify(response));
 });
 
 
 app.get('/nextPopularTags', auth, async (req, res) => {
   // console.log(req.body)
-  let map = new Map(Object.entries(req.body.popular_tags_list_map));
+  // let map = new Map(Object.entries(req.body.popular_tags_list_map));
   // console.log(map)
+  let keyword = req.body.keyword;
   let start_index = req.body.start_index;
+  // let ending_index = start_index+10;
   var tag_listing = new TagListing;
-  let popular_tags_map = new Map();
-  let popular_tags_calls = [];
-  // console.log(map.keys())
-  let keys = Array.from(map.keys());
-  let ending_index = start_index+10;
-  console.log(ending_index)
-  if (ending_index > keys.length) {
-    ending_index = keys.length;
-  }
-  console.log(ending_index)
-  // console.log(mapSort1)
-  for (let j = start_index; j < ending_index; j++) {
-    // console.log(key.toLowerCase())
-    if (!popular_tags_map.has(keys[j].toLowerCase())) {
-      let tag_properties = {
-        count: map.get(keys[j].toLowerCase()),
-        price: 0,
-        photos: 0,
-        views: 0,
-        num_favorers: 0,
-        long_tail: false,
-        days_to_ship: 0,
-      }
-      popular_tags_map.set(keys[j].toLowerCase(), tag_properties);
-      // console.log(key.toLowerCase())
-      popular_tags_calls.push(tag_listing.getTagListing(keys[j].toLowerCase(), api_keys[0]).then(response => {
-        // console.log(` hello ${JSON.stringify(response)}`)
-        if (response.status == 200) {
-          // console.log(response)
-          let tag_properties = popular_tags_map.get(keys[j].toLowerCase());
-          tag_properties.price += parseFloat(response.result.average_price);
-          tag_properties.photos += response.result.photos
-          tag_properties.views += response.result.searches;
-          tag_properties.num_favorers += parseInt(response.result.favourites);
-          tag_properties.long_tail = keys[j].toLowerCase().indexOf(' ') >= 3;
-          if (response.result.min_max_shipping_days != null) {
-            tag_properties.days_to_ship = response.result.min_max_shipping_days;
-          }
-          popular_tags_map.set(keys[j].toLowerCase(), tag_properties);
-        }
-      }))
+  // if (ending_index > similar_shopper_lists.length) {
+  //   ending_index = similar_shopper_lists.length;
+  // }
 
-      // await Promise.race(popular_tags_calls);
-    }
-
-  }
-  await Promise.all(popular_tags_calls)
-  let response = {
-    status: 200,
-    popular_tags_map: Array.from(popular_tags_map.entries())
-  }
+  let response = await tag_listing.getTagListing(keyword, start_index, 1);
   res.status(response.status).end(JSON.stringify(response));
+
 });
 
 
@@ -702,6 +573,7 @@ function validateCode(otp, user_info_response) {
     }
   }
 }
+
 
 
 // app.delete("/logout", auth, (req, res) => {
