@@ -233,7 +233,7 @@ app.get('/getListing/:keyword', auth, async (req, res) => {
 
 
 
-app.get('/nextSimilarShopperTags', auth, async (req, res) => {
+app.post('/nextSimilarShopperTags', auth, async (req, res) => {
   let keyword = req.body.keyword;
   let start_index = req.body.start_index;
   // let ending_index = start_index+10;
@@ -249,7 +249,7 @@ app.get('/nextSimilarShopperTags', auth, async (req, res) => {
 
 
 
-app.get('/nextLongTailAlternativeTags', auth, async (req, res) => {
+app.post('/nextLongTailAlternativeTags', auth, async (req, res) => {
   let keyword = req.body.keyword;
   let start_index = req.body.start_index;
   // let ending_index = start_index+10;
@@ -263,7 +263,7 @@ app.get('/nextLongTailAlternativeTags', auth, async (req, res) => {
 });
 
 
-app.get('/nextPopularTags', auth, async (req, res) => {
+app.post('/nextPopularTags', auth, async (req, res) => {
   // console.log(req.body)
   // let map = new Map(Object.entries(req.body.popular_tags_list_map));
   // console.log(map)
@@ -573,7 +573,6 @@ function validateCode(otp, user_info_response) {
     }
   }
 }
-
 
 
 // app.delete("/logout", auth, (req, res) => {
