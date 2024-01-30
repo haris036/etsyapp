@@ -20,53 +20,95 @@ const client = new MongoClient(uri);
 
 var method = History.prototype;
 
-let payload = {
-  "dataSource": "gkp",
-  "country": "us",
-  "currency": "usd",
-  "kw": [
-    "gift",
-  ]
-};
+// let payload = {
+//   "dataSource": "gkp",
+//   "country": "us",
+//   "currency": "usd",
+//   "kw": [
+//     "gift",
+//   ]
+// };
 
 function History() { }
+// method.getHistoricalMetrices = async function (searchKeyWord) {
+//   let response;
+//   try {
+
+//     let startTime = new Date(Date.now() - 31556926 * 1000.0)
+//     startTime.setHours(0);
+//     startTime.setMinutes(0);
+//     startTime.setSeconds(0);
+//     startTime.setMilliseconds(0);
+//     // console.log(startTime.toISOString())
+
+//     await googleTrends.interestOverTime({ keyword: searchKeyWord, startTime: startTime }, function (err, results) {
+//       if (err) {
+//         console.log(err)
+//         response = {
+//           status: 500,
+//           error_msg: err,
+//         };
+//       }
+//       else {
+//         console.log(results)
+//         let json_results = JSON.parse(results);
+//         console.log(JSON.parse(results))
+//         response = {
+//           status: 200,
+//           stats: json_results.default
+//         }
+//         // return json_results.default;
+//       };
+//     });
+//   } catch (e) {
+//     response = {
+//       status: 500,
+//       error_msg: e,
+//     }
+//   }
+// return response
+// }
+
+
+// const axios = require('fetch');
+// const qs = require('qs');
+
+const access_token = 'bbbfe046ae28fff1b213';
+
 method.getHistoricalMetrices = async function (searchKeyWord) {
-  let response;
-  try {
 
-    let startTime = new Date(Date.now() - 31556926 * 1000.0)
-    startTime.setHours(0);
-    startTime.setMinutes(0);
-    startTime.setSeconds(0);
-    startTime.setMilliseconds(0);
-    // console.log(startTime.toISOString())
-
-    await googleTrends.interestOverTime({ keyword: searchKeyWord, startTime: startTime }, function (err, results) {
-      if (err) {
-        console.log(err)
-        response = {
-          status: 500,
-          error_msg: err,
-        };
-      }
-      else {
-        console.log(results)
-        let json_results = JSON.parse(results);
-        console.log(JSON.parse(results))
-        response = {
-          status: 200,
-          stats: json_results.default
+let payload = {
+    "dataSource": "cli",
+    "country": "",
+    "currency": "USD",
+    "kw": [
+      searchKeyWord
+    ]
+};
+  let _response;
+  await axios.post('https://api.keywordseverywhere.com/v1/get_keyword_data',
+    qs.stringify(payload),
+    {
+        headers: {
+            'Accept': 'application/json',
+            'Authorization': `Bearer ${access_token}`
         }
-        // return json_results.default;
-      };
+    })
+    .then(response => {
+      _response = {
+        status: 200,
+        data: response.data.data[0],
+      }
+      // console.log(_response)
+      
+    })
+    .catch(error => {
+        _response = {
+          status: 500,
+          error_msg: error
+        };
     });
-  } catch (e) {
-    response = {
-      status: 500,
-      error_msg: e,
-    }
-  }
-return response
+    return _response;
 }
 
 method.getHistory = async function (email) {

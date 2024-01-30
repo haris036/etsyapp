@@ -70,50 +70,25 @@ method.getListing = async function (searchKeyWord, email, is_single_listing, api
     let sum_of_time_lines = 0;
     let date_of_timelines = "";
     let trend;
+    let engagement = 0;
     // let long_tail_alternative_list = [];
     let images_array = [];
     let history_call = !is_single_listing ? (history.getHistoricalMetrices(searchKeyWord).then(response => {
+      console.log("Haris")
       console.log(response)
-
-      for (let i = 0; i < response.stats.timelineData.length; i++) {
-        let date = new Date(response.stats.timelineData[i].time * 1000.0);
-        let month = date.getMonth() + 1;
-
-        let temp_date_of_timelines = "" + month + "-" + date.getFullYear();
-        if (i == 0) {
-          date_of_timelines = temp_date_of_timelines;
-          trend = {
-            month: date.getMonth() + 1,
-            year: date.getFullYear(),
-            value: 0,
-          }
-        } else if (i == response.stats.timelineData.length - 1) {
-          trend.value = response.stats.timelineData[i].value[0];
-          // console.log(trend)
-          trends.push(trend)
-        } else if (date_of_timelines != temp_date_of_timelines) {
-          // console.log(trend)
-          trend.value = response.stats.timelineData[i].value[0];
-          trends.push(trend)
-          trend = {
-            month: date.getMonth() + 1,
-            year: date.getFullYear(),
-            value: 0,
-          }
-          date_of_timelines = temp_date_of_timelines;
-          sum_of_time_lines = 0;
-          count_of_timelines = 0;
+      for (let i = 0; i < response.data.trend.length; i++) {
+        trend = {
+          month: response.data.trend[i].month,
+          year: response.data.trend[i].year,
+          value: response.data.trend[i].value,
         }
-        if (date_of_timelines == temp_date_of_timelines) {
-          sum_of_time_lines += sum_of_time_lines;
-          count_of_timelines += 1;
-        }
-
+        trends.push(trend);
       }
+      engagement = response.data.vol;
+      // console.log(engagement)
       historical_metrices = {
         trends: trends,
       }
-
     })) : null;
 
     let response = await fetch(urlGetActiveListings, requestOptions);
@@ -413,8 +388,9 @@ method.getListing = async function (searchKeyWord, email, is_single_listing, api
         // similar_shopper_lists: similar_shopper_lists,
         // long_tail_alternative_list: long_tail_alternative_list,
         images: images_array,
+        engagement: engagement,
       };
-
+      
       if (!is_single_listing) {
         await client.connect();
 
@@ -432,6 +408,7 @@ method.getListing = async function (searchKeyWord, email, is_single_listing, api
 
         await history.insertOne(doc);
       }
+      console.log(result.engagement)
       let response = {
         status: 200,
         result: result,
@@ -561,9 +538,9 @@ async function get_categories() {
   );
   let category_map = new Map();
   let response = await fetch(url, requestOptions);
-
+  // console.log(response.result)
   let results = await response.json();
-  // console.log(results.results)
+  console.log(results.results)
   for (let result of results.results) {
     category_map.set(result.id, result.name);
     if (result.children && result.children.length != 0)
