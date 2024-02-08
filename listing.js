@@ -52,7 +52,7 @@ method.getListing = async function (searchKeyWord, email, is_single_listing, api
 
   );
 
-  let categories_map = await get_categories();
+  let categories_map = !is_single_listing?await get_categories():null;
 
 
 
