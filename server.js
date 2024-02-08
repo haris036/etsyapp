@@ -499,7 +499,7 @@ app.post('/updateSubsciption', auth, async (req, res) => {
   res.status(response.status).end(JSON.stringify(response));
 });
 
-app.get('/getSingleListing',
+app.post('/getSingleListing',
   auth,
   async (req, res) => {
     let string = req.body.listing_id;
