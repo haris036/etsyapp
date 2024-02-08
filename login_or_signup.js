@@ -673,10 +673,10 @@ method.getStripeData = async function (_email,) {
   let response = {
     status: 200,
     stripe_info: {
-      email: stripe_data.email,
-      customer_id: stripe_data.customer_id,
-      subscrption_id: stripe_data.subscribtion_id,
-      subscribtion_status: stripe_data.subscribtion_status,
+      email: stripe_data?stripe_data.email:null,
+      customer_id: stripe_data?stripe_data.customer_id:null,
+      subscrption_id: stripe_data?stripe_data.subscribtion_id:null,
+      subscribtion_status: stripe_data?stripe_data.subscribtion_status:null,
     } 
   }
   return response;
