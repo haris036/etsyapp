@@ -400,11 +400,13 @@ app.post('/updateProfile', auth, upload.single('image'), async (req, res) => {
 // "postal_code": "",
 // "state": ""
 
+
 app.get('/signUp', async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js");
   var john = new LoginOrSignUp();
-  
+  let response;
   try {
+    console.log(req.query)
     const customer = await stripe.customers.create
     ({
       email
@@ -444,8 +446,9 @@ app.get('/signUp', async (req, res) => {
     });
   
     var john = new LoginOrSignUp();
-    let response_stripe = await john.saveStripeUser(req.user.user, customer.id);
-    let response = await john.saveUser(
+    console.log(customer)
+    let response_stripe = await john.saveStripeUser(req.query.email, customer.id);
+    response = await john.saveUser(
     req.query.email, req.query.password, req.query.is_subscribed,
     req.query.country, req.query.name, req.query.city,
     req.query.street, req.query.postal_code, req.query.state);
@@ -456,10 +459,11 @@ app.get('/signUp', async (req, res) => {
 
     response["customer_id"] = customer.id;
   } catch (e) {
+    console.log(e)
     return res.status(500).send(e);
   }
+  console.log(response)
   res.status(response.status).end(JSON.stringify(response));
-  console.log(res)
 });
 
 app.get('/forgotPassword', async (req, res) => {
