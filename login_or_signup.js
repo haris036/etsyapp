@@ -550,7 +550,7 @@ method.deleteAccount = async function (_email,) {
   return response;
 }
 
-method.saveStripeUser = async function(email, custome_id) {
+method.saveStripeUser = async function(email, customer_id) {
   try {
 
     await client.connect();
@@ -558,7 +558,7 @@ method.saveStripeUser = async function(email, custome_id) {
     var query = { email: email };
     var doc = {
       email: email,
-      custome_id: custome_id,
+      customer_id: customer_id,
     };
     await dbo.collection("stripe_data").replaceOne(query, doc, { upsert: true });
   } catch (e) {
@@ -583,13 +583,14 @@ method.saveStripeUser = async function(email, custome_id) {
 }
 
 
-method.updateStripeSubscriptionIdAndStatus = async function( subscription_id, status) {
+method.updateStripeSubscriptionIdAndStatus = async function( email, subscription_id, status) {
   try {
 
     await client.connect();
     var dbo = client.db("etsy_database");
-    var query = { subscription_id: subscription_id };
+    var query = { email: email };
     var doc = {
+      subscription_id: subscription_id,
       status: status,
     };
     await dbo.collection("stripe_data").updateOne(query, doc, { upsert: true });
@@ -679,6 +680,7 @@ method.getStripeData = async function (_email,) {
       subscribtion_status: stripe_data?stripe_data.subscribtion_status:null,
     } 
   }
+  console.log(response)
   return response;
 }
 
