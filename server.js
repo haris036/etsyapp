@@ -122,11 +122,10 @@ app.post('/add_stripe_customer', auth, async (req, res) => {
 
 
 app.post('/create-subscription', async (req, res) => {
-  const customerId = req.cookies['customer'];
-  const priceId = req.body.priceId;
   var LoginOrSignUp = require("./login_or_signup.js");
   try {
-
+    const customerId = req.cookies['customer'];
+    const priceId = req.body.priceId;
     const subscription = await stripe.subscriptions.create
       ({
         customer
@@ -147,7 +146,7 @@ app.post('/create-subscription', async (req, res) => {
           : ['latest_invoice.payment_intent'],
       });
     var john = new LoginOrSignUp();
-    let response = await john.updateStripeSubscribtionIdAndStatus(req.user.user, subscription.id, subscription.status);
+    let response = await john.updateStripeSubscriptionIdAndStatus(req.user.user, subscription.id, subscription.status);
     if (response.status != 200) {
       return res.status(response.status).send(response);
     }
@@ -190,17 +189,17 @@ app.post('/webhook', bodyParser.raw({ type: 'application/json' }), async (req, r
   switch (event.type) {
     case 'invoice.paid':
       var john = new LoginOrSignUp();
-      response = await john.updateStripeSubscribtionIdAndStatus(dataObject.id, "active");
+      response = await john.updateStripeSubscriptionStatus(dataObject.id, "active");
 
       break;
     case 'invoice.payment_failed':
       var john = new LoginOrSignUp();
-      response = await john.updateStripeSubscribtionIdAndStatus(dataObject.id, "in-active");
+      response = await john.updateStripeSubscriptionStatus(dataObject.id, "in-active");
       break;
     case 'customer.subscription.deleted':
       if (event.request == null) {
         var john = new LoginOrSignUp();
-        response = await john.updateStripeSubscribtionIdAndStatus(dataObject.id, "un-subscribe");
+        response = await john.updateStripeSubscriptionStatus(dataObject.id, "un-subscribe");
       }
       break;
     default:
@@ -287,7 +286,7 @@ app.post('/registerForNewsAndUpdates', async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js");
   var john = new LoginOrSignUp();
   let is_single_listing = false;
-  let response = await john.getListing(req.params.keyword, req.user.user, is_single_listing);
+  let response = await john.registerForNewsAndUpdates(req.body.email,);
   res.status(response.status).end(JSON.stringify(response));
 });
 
@@ -305,15 +304,14 @@ app.get('/me', auth, async (req, res) => {
   let img_response = await john.getImage(req.user.user);
   let stripe_response = await john.getStripeData(req.user.user);
   console.log(img_response)
-  if (img_response.status == 200) {
-    if (img_response.image_data)
+  if (img_response.status == 200 && img_response.image_data) {
       response.user_info['image_url'] = img_response.image_data.file_path ? img_response.image_data.file_path : null;
   }
-
-  if (stripe_response.status == 200) {
-    response.user_info['customer_id'] = stripe_response.stripe_info.customer_id ? stripe_response.stripe_info.customer_id : null;
-    response.user_info['subscription_id'] = stripe_response.stripe_info.subscription_id ? stripe_response.stripe_info.subscription_id : null;
-    response.user_info['subscription_status'] = stripe_response.stripe_info.subscription_status ? stripe_response.stripe_info.subscription_status : null;
+  console.log(stripe_response)
+  if (stripe_response.status == 200 && stripe_response.stripe_info) {
+    response.user_info['customer_id'] = stripe_response.stripe_info.customer_id;
+    response.user_info['subscription_id'] = stripe_response.stripe_info.subscription_id;
+    response.user_info['subscription_status'] = stripe_response.stripe_info.subscription_status;
 
   }
   res.status(response.status).end(JSON.stringify(response));
@@ -332,11 +330,18 @@ app.get('/signIn', async (req, res) => {
   let response = await john.getUser(req.query.email, req.query.password);
   if (response.status == 200) {
     let img_response = await john.getImage(req.query.email);
-    if (img_response.status == 200) {
-      if (img_response.image_data)
+    if (img_response.status == 200 && img_response.image_data) {
         response.user_info['image_url'] = img_response.image_data.file_path;
     }
+    let stripe_response = await john.getStripeData(req.user.user);
+    if (stripe_response.status == 200 && stripe_response.stripe_info) {
+      response.user_info['customer_id'] = stripe_response.stripe_info.customer_id;
+      response.user_info['subscription_id'] = stripe_response.stripe_info.subscription_id;
+      response.user_info['subscription_status'] = stripe_response.stripe_info.subscription_status;
+    }
+
   }
+  
   res.status(response.status).end(JSON.stringify(response));
 });
 
@@ -399,7 +404,6 @@ app.post('/updateProfile', auth, upload.single('image'), async (req, res) => {
 // "street": "",
 // "postal_code": "",
 // "state": ""
-
 
 app.get('/signUp', async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js");
