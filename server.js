@@ -124,7 +124,7 @@ app.post('/add_stripe_customer', auth, async (req, res) => {
 app.post('/create-subscription', async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js");
   try {
-    const customerId = req.cookies['customerId'];
+    const customerId = req.body.customer_id;
     const priceId = req.body.priceId;
     const subscription = await stripe.subscriptions.create
       ({
