@@ -333,7 +333,7 @@ app.get('/signIn', async (req, res) => {
     if (img_response.status == 200 && img_response.image_data) {
         response.user_info['image_url'] = img_response.image_data.file_path;
     }
-    let stripe_response = await john.getStripeData(req.user.user);
+    let stripe_response = await john.getStripeData(req.query.email);
     if (stripe_response.status == 200 && stripe_response.stripe_info) {
       response.user_info['customer_id'] = stripe_response.stripe_info.customer_id;
       response.user_info['subscription_id'] = stripe_response.stripe_info.subscription_id;
