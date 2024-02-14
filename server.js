@@ -121,7 +121,7 @@ app.post('/add_stripe_customer', auth, async (req, res) => {
 });
 
 
-app.post('/create-subscription', async (req, res) => {
+app.post('/create-subscription', auth, async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js");
   try {
     const customerId = req.body.customerId;
@@ -145,6 +145,7 @@ app.post('/create-subscription', async (req, res) => {
         expand
           : ['latest_invoice.payment_intent'],
       });
+      console.log(subscription)
     var john = new LoginOrSignUp();
     let response = await john.updateStripeSubscriptionIdAndStatus(req.user.user, subscription.id, subscription.status);
     if (response.status != 200) {
