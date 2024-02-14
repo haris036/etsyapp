@@ -640,6 +640,7 @@ method.updateStripeSubscriptionStatus = async function(subscription_id, status) 
     await client.close();
 
   }
+}
 
 method.getStripeData = async function (_email,) {
 
