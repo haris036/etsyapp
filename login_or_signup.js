@@ -583,6 +583,8 @@ method.saveStripeUser = async function(email, customer_id) {
 }
 
 
+
+
 method.updateStripeSubscriptionIdAndStatus = async function( email, subscription_id, status) {
   try {
 
@@ -593,7 +595,7 @@ method.updateStripeSubscriptionIdAndStatus = async function( email, subscription
       subscription_id: subscription_id,
       status: status,
     };
-    await dbo.collection("stripe_data").updateOne(query, doc, { upsert: true });
+    await dbo.collection("stripe_data").updateOne(query, doc);
   } catch (e) {
     console.log(e)
     let response = {
@@ -625,7 +627,7 @@ method.updateStripeSubscriptionStatus = async function(subscription_id, status) 
     var doc = {
       status: status,
     };
-    await dbo.collection("stripe_data").updateOne(query, doc, { upsert: true });
+    await dbo.collection("stripe_data").updateOne(query, doc);
   } catch (e) {
     console.log(e)
     let response = {
@@ -638,14 +640,6 @@ method.updateStripeSubscriptionStatus = async function(subscription_id, status) 
     await client.close();
 
   }
-
-  let response = {
-    status: 200,
-    msg: "Stripe session updated",
-  }
-
-  return response;
-}
 
 method.getStripeData = async function (_email,) {
 
