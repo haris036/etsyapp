@@ -585,6 +585,7 @@ method.saveStripeUser = async function(email, customer_id) {
 
 
 
+
 method.updateStripeSubscriptionIdAndStatus = async function( email, subscription_id, status) {
   try {
 
@@ -592,8 +593,10 @@ method.updateStripeSubscriptionIdAndStatus = async function( email, subscription
     var dbo = client.db("etsy_database");
     var query = { email: email };
     var doc = {
-      subscription_id: subscription_id,
-      status: status,
+      $set: {
+        subscription_id: subscription_id,
+        status: status,
+      }
     };
     await dbo.collection("stripe_data").updateOne(query, doc);
   } catch (e) {
@@ -625,7 +628,9 @@ method.updateStripeSubscriptionStatus = async function(subscription_id, status) 
     var dbo = client.db("etsy_database");
     var query = { subscription_id: subscription_id };
     var doc = {
-      status: status,
+      $set: {
+        status: status,
+      }
     };
     await dbo.collection("stripe_data").updateOne(query, doc);
   } catch (e) {
