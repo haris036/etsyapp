@@ -163,7 +163,7 @@ app.post('/create-subscription', auth, async (req, res) => {
 });
 
 
-app.post('/webhook', bodyParser.raw({ type: 'application/json' }), async (req, res) => {
+app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
   let event;
   var LoginOrSignUp = require("./login_or_signup.js");
 	console.log(process.env.STRIPE_WEBHOOK_SECRET);
