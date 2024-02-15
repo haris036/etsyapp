@@ -79,20 +79,22 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
   switch (event.type) {
     case 'invoice.paid':
       var john = new LoginOrSignUp();
-      response = await john.updateStripeSubscriptionStatus(dataObject.id, "active");
+      response = await john.updateStripeSubscriptionStatus(dataObject.customer, "active");
 
       break;
     case 'invoice.payment_failed':
       var john = new LoginOrSignUp();
-      response = await john.updateStripeSubscriptionStatus(dataObject.id, "in-active");
+      response = await john.updateStripeSubscriptionStatus(dataObject.customer, "in-active");
       break;
     case 'customer.subscription.deleted':
       if (event.request == null) {
         var john = new LoginOrSignUp();
-        response = await john.updateStripeSubscriptionStatus(dataObject.id, "un-subscribe");
+        response = await john.updateStripeSubscriptionStatus(dataObject.customer, "un-subscribe");
       }
       break;
     default:
+      var john = new LoginOrSignUp();
+      response = await john.updateStripeSubscriptionStatus(dataObject.customer, "in-active");
     // Unexpected event type
   }
   res.sendStatus(200);
