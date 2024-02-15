@@ -621,12 +621,14 @@ method.updateStripeSubscriptionIdAndStatus = async function( email, subscription
 }
 
 
-method.updateStripeSubscriptionStatus = async function(subscription_id, status) {
+
+
+method.updateStripeSubscriptionStatus = async function(customer_id, status) {
   try {
 
     await client.connect();
     var dbo = client.db("etsy_database");
-    var query = { subscription_id: subscription_id };
+    var query = { customer_id: customer_id };
     var doc = {
       $set: {
         status: status,
@@ -646,7 +648,6 @@ method.updateStripeSubscriptionStatus = async function(subscription_id, status) 
 
   }
 }
-
 method.getStripeData = async function (_email,) {
 
   let stripe_data;
