@@ -166,6 +166,7 @@ app.post('/create-subscription', auth, async (req, res) => {
 app.post('/webhook', bodyParser.raw({ type: 'application/json' }), async (req, res) => {
   let event;
   var LoginOrSignUp = require("./login_or_signup.js");
+	console.log(process.env.STRIPE_WEBHOOK_SECRE);
   try {
     event = stripe.webhooks.constructEvent(
       req.body,
@@ -173,7 +174,7 @@ app.post('/webhook', bodyParser.raw({ type: 'application/json' }), async (req, r
       process.env.STRIPE_WEBHOOK_SECRET
     );
   } catch (err) {
-    console.log(err);
+    console.log(err.message);
     console.log(`⚠️  Webhook signature verification failed.`);
     console.log(
       `⚠️  Check the env file and enter the correct webhook secret.`
