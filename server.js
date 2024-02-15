@@ -50,8 +50,58 @@ app.get('/', async (req, res) => {
   res.send("<h1>Server is running</h1>")
 });
 
+
+app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+  let event;
+  var LoginOrSignUp = require("./login_or_signup.js");
+	console.log(process.env.STRIPE_WEBHOOK_SECRET);
+  try {
+    event = stripe.webhooks.constructEvent(
+      req.body,
+      req.headers['stripe-signature'],
+      process.env.STRIPE_WEBHOOK_SECRET
+    );
+  } catch (err) {
+    console.log(err.message);
+    console.log(`⚠️  Webhook signature verification failed.`);
+    console.log(
+      `⚠️  Check the env file and enter the correct webhook secret.`
+    );
+    return res.sendStatus(400);
+  }
+  // Extract the object from the event.
+  const dataObject = event.data.object;
+  let response;
+  // Handle the event
+  // Review important events for Billing webhooks
+  // https://stripe.com/docs/billing/webhooks
+  // Remove comment to see the various objects sent for this sample
+  switch (event.type) {
+    case 'invoice.paid':
+      var john = new LoginOrSignUp();
+      response = await john.updateStripeSubscriptionStatus(dataObject.id, "active");
+
+      break;
+    case 'invoice.payment_failed':
+      var john = new LoginOrSignUp();
+      response = await john.updateStripeSubscriptionStatus(dataObject.id, "in-active");
+      break;
+    case 'customer.subscription.deleted':
+      if (event.request == null) {
+        var john = new LoginOrSignUp();
+        response = await john.updateStripeSubscriptionStatus(dataObject.id, "un-subscribe");
+      }
+      break;
+    default:
+    // Unexpected event type
+  }
+  res.sendStatus(200);
+}
+);
+
 app.use(
-  express.json({
+  express.json(
+	  // {
     // We need the raw body to verify webhook signatures.
     // Let's compute it only when hitting the Stripe webhook endpoint.
     // verify: function (req, res, buf) {
@@ -59,7 +109,8 @@ app.use(
     //     req.rawBody = buf.toString();
     //   }
     // },
-  })
+  // }
+  )
 );
 
 app.post('/add_stripe_customer', auth, async (req, res) => {
@@ -163,53 +214,6 @@ app.post('/create-subscription', auth, async (req, res) => {
 });
 
 
-app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
-  let event;
-  var LoginOrSignUp = require("./login_or_signup.js");
-	console.log(process.env.STRIPE_WEBHOOK_SECRET);
-  try {
-    event = stripe.webhooks.constructEvent(
-      req.body,
-      req.headers['stripe-signature'],
-      process.env.STRIPE_WEBHOOK_SECRET
-    );
-  } catch (err) {
-    console.log(err.message);
-    console.log(`⚠️  Webhook signature verification failed.`);
-    console.log(
-      `⚠️  Check the env file and enter the correct webhook secret.`
-    );
-    return res.sendStatus(400);
-  }
-  // Extract the object from the event.
-  const dataObject = event.data.object;
-  let response;
-  // Handle the event
-  // Review important events for Billing webhooks
-  // https://stripe.com/docs/billing/webhooks
-  // Remove comment to see the various objects sent for this sample
-  switch (event.type) {
-    case 'invoice.paid':
-      var john = new LoginOrSignUp();
-      response = await john.updateStripeSubscriptionStatus(dataObject.id, "active");
-
-      break;
-    case 'invoice.payment_failed':
-      var john = new LoginOrSignUp();
-      response = await john.updateStripeSubscriptionStatus(dataObject.id, "in-active");
-      break;
-    case 'customer.subscription.deleted':
-      if (event.request == null) {
-        var john = new LoginOrSignUp();
-        response = await john.updateStripeSubscriptionStatus(dataObject.id, "un-subscribe");
-      }
-      break;
-    default:
-    // Unexpected event type
-  }
-  res.sendStatus(200);
-}
-);
 
 app.post('/cancel-subscription', async (req, res) => {
   const deletedSubscription = await stripe.subscriptions.del(
