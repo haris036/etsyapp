@@ -647,6 +647,11 @@ method.updateStripeSubscriptionStatus = async function(customer_id, status) {
     await client.close();
 
   }
+  let response = {
+    status: 200,
+    error_msg: "Status updated successfully",
+  }
+  return response;
 }
 method.getStripeData = async function (_email,) {
 
