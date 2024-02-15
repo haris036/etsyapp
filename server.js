@@ -17,7 +17,7 @@ const app = express();
 const cors = require("cors");
 var multer = require('multer');
 var path = require('path');
-var bodyParser = require('body-parser');
+// var bodyParser = require('body-parser');
 const api_keys = process.env.API_KEYS.split(',')
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const TagListing = require("./tags_listing.js");
@@ -32,8 +32,8 @@ var storage = multer.diskStorage({
   }
 });
 
-app.use(bodyParser.urlencoded({ extended: false }))
-app.use(bodyParser.json())
+// app.use(bodyParser.urlencoded({ extended: false }))
+// app.use(bodyParser.json())
 
 var upload = multer({ storage: storage });
 const corsOptions = {
@@ -54,11 +54,11 @@ app.use(
   express.json({
     // We need the raw body to verify webhook signatures.
     // Let's compute it only when hitting the Stripe webhook endpoint.
-    verify: function (req, res, buf) {
-      if (req.originalUrl.startsWith("/webhook")) {
-        req.rawBody = buf.toString();
-      }
-    },
+    // verify: function (req, res, buf) {
+    //   if (req.originalUrl.startsWith("/webhook")) {
+    //     req.rawBody = buf.toString();
+    //   }
+    // },
   })
 );
 
