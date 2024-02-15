@@ -319,7 +319,7 @@ app.get('/me', auth, async (req, res) => {
   if (stripe_response.status == 200 && stripe_response.stripe_info) {
     response.user_info['customer_id'] = stripe_response.stripe_info.customer_id;
     response.user_info['subscription_id'] = stripe_response.stripe_info.subscription_id;
-    response.user_info['subscription_status'] = stripe_response.stripe_info.subscription_status;
+    response.user_info['subscription_status'] = stripe_response.stripe_info.status;
 
   }
   res.status(response.status).end(JSON.stringify(response));
@@ -345,14 +345,13 @@ app.get('/signIn', async (req, res) => {
     if (stripe_response.status == 200 && stripe_response.stripe_info) {
       response.user_info['customer_id'] = stripe_response.stripe_info.customer_id;
       response.user_info['subscription_id'] = stripe_response.stripe_info.subscription_id;
-      response.user_info['subscription_status'] = stripe_response.stripe_info.subscription_status;
+      response.user_info['subscription_status'] = stripe_response.stripe_info.status;
     }
 
   }
   
   res.status(response.status).end(JSON.stringify(response));
 });
-
 
 
 
