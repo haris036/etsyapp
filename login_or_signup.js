@@ -653,6 +653,7 @@ method.updateStripeSubscriptionStatus = async function(customer_id, status) {
   }
   return response;
 }
+
 method.getStripeData = async function (_email,) {
 
   let stripe_data;
@@ -682,13 +683,14 @@ method.getStripeData = async function (_email,) {
     stripe_info: {
       email: stripe_data?stripe_data.email:null,
       customer_id: stripe_data?stripe_data.customer_id:null,
-      subscrption_id: stripe_data?stripe_data.subscribtion_id:null,
-      subscribtion_status: stripe_data?stripe_data.subscribtion_status:null,
+      subscription_id: stripe_data?stripe_data.subscription_id:null,
+      status: stripe_data?stripe_data.status:null,
     } 
   }
   console.log(response)
   return response;
 }
+
 
 method.forgotPassword = async function (_email,) {
 
