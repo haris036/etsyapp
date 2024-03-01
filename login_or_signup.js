@@ -217,7 +217,12 @@ method.getUser = async function (_email, _password) {
     if (user_data.password == _password) {
       response = tokenGenerator.getToken(_email);
     }
-
+    var creation_date = null;
+    if (user_data.creation_time) {
+      var utcSeconds = user_data.creation_time;
+      creation_date = new Date(0); // The 0 there is the key, which sets the date to the epoch
+      creation_date.setUTCSeconds(utcSeconds);
+    }
     user_info = {
       email: user_data.email,
       access_token: response.access_token,
@@ -228,6 +233,7 @@ method.getUser = async function (_email, _password) {
       contact_no: user_data.contact_no ? user_data.contact_no : null,
       country: user_data.country ? user_data.country : null,
       date_of_birth: user_data.date_of_birth ? user_data.date_of_birth : null,
+      creation_date: creation_date,
     }
     console.log(user_info)
   } catch (e) {
@@ -272,6 +278,12 @@ method.getUserProfile = async function (_email,) {
     await client.close();
 
   }
+  var creation_date = null;
+  if (user_data.creation_time) {
+    var utcSeconds = user_data.creation_time;
+    creation_date = new Date(0); // The 0 there is the key, which sets the date to the epoch
+    creation_date.setUTCSeconds(utcSeconds);
+  }
   let response = {
     status: 200,
     user_info: {
@@ -286,6 +298,7 @@ method.getUserProfile = async function (_email,) {
       street: user_data.street ? user_data.street : null,
       postal_code: user_data.postal_code ? user_data.postal_code : null,
       state: user_data.state ? user_data.state : null,
+      creation_date: creation_date,
     }
   }
   return response;
@@ -585,7 +598,6 @@ method.saveStripeUser = async function(email, customer_id) {
 
 
 
-
 method.updateStripeSubscriptionIdAndStatus = async function( email, subscription_id, status) {
   try {
 
@@ -619,8 +631,6 @@ method.updateStripeSubscriptionIdAndStatus = async function( email, subscription
 
   return response;
 }
-
-
 
 
 method.updateStripeSubscriptionStatus = async function(customer_id, status) {
@@ -690,7 +700,6 @@ method.getStripeData = async function (_email,) {
   console.log(response)
   return response;
 }
-
 
 method.forgotPassword = async function (_email,) {
 
