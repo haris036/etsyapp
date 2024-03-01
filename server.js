@@ -17,7 +17,7 @@ const app = express();
 const cors = require("cors");
 var multer = require('multer');
 var path = require('path');
-// var bodyParser = require('body-parser');
+var bodyParser = require('body-parser');
 const api_keys = process.env.API_KEYS.split(',')
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const TagListing = require("./tags_listing.js");
@@ -32,8 +32,8 @@ var storage = multer.diskStorage({
   }
 });
 
-// app.use(bodyParser.urlencoded({ extended: false }))
-// app.use(bodyParser.json())
+app.use(bodyParser.urlencoded({ extended: false }))
+app.use(bodyParser.json())
 
 var upload = multer({ storage: storage });
 const corsOptions = {
@@ -54,7 +54,6 @@ app.get('/', async (req, res) => {
 app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
   let event;
   var LoginOrSignUp = require("./login_or_signup.js");
-	console.log(process.env.STRIPE_WEBHOOK_SECRET);
   try {
     event = stripe.webhooks.constructEvent(
       req.body,
@@ -62,7 +61,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
       process.env.STRIPE_WEBHOOK_SECRET
     );
   } catch (err) {
-    console.log(err.message);
+    console.log(err);
     console.log(`⚠️  Webhook signature verification failed.`);
     console.log(
       `⚠️  Check the env file and enter the correct webhook secret.`
@@ -86,6 +85,14 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
       var john = new LoginOrSignUp();
       response = await john.updateStripeSubscriptionStatus(dataObject.customer, "in-active");
       break;
+    case 'customer.subscription.paused':
+      var john = new LoginOrSignUp();
+      response = await john.updateStripeSubscriptionStatus(dataObject.customer, "in-active");
+      break;
+    case 'customer.subscription.resumed':
+      var john = new LoginOrSignUp();
+      response = await john.updateStripeSubscriptionStatus(dataObject.customer, "active");
+      break;
     case 'customer.subscription.deleted':
       if (event.request == null) {
         var john = new LoginOrSignUp();
@@ -103,7 +110,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
 
 app.use(
   express.json(
-	  // {
+    // {
     // We need the raw body to verify webhook signatures.
     // Let's compute it only when hitting the Stripe webhook endpoint.
     // verify: function (req, res, buf) {
@@ -111,7 +118,7 @@ app.use(
     //     req.rawBody = buf.toString();
     //   }
     // },
-  // }
+    // }
   )
 );
 
@@ -188,6 +195,7 @@ app.post('/create-subscription', auth, async (req, res) => {
             price
               : priceId,
           }],
+        trial_period_days: 7,
         payment_behavior
           : 'default_incomplete',
         payment_settings
@@ -195,10 +203,19 @@ app.post('/create-subscription', auth, async (req, res) => {
           save_default_payment_method
             : 'on_subscription'
         },
+
+        trial_settings
+          : {
+          end_behavior
+            : {
+            missing_payment_method
+              : 'cancel',
+          },
+        },
         expand
           : ['latest_invoice.payment_intent'],
       });
-      console.log(subscription)
+    console.log(subscription)
     var john = new LoginOrSignUp();
     let response = await john.updateStripeSubscriptionIdAndStatus(req.user.user, subscription.id, subscription.status);
     if (response.status != 200) {
@@ -223,7 +240,7 @@ app.post('/cancel-subscription', async (req, res) => {
   );
   var LoginOrSignUp = require("./login_or_signup.js");
   var john = new LoginOrSignUp();
-  response = await john.updateStripeSubscribtionIdAndStatus(dataObject.id, "un-subscribe");
+  response = await john.updateStripeSubscribtionIdAndStatus(dataObject.customer, "un-subscribe");
   if (response != 200) {
     return res.status(response.status).send(response);
   }
@@ -313,7 +330,7 @@ app.get('/me', auth, async (req, res) => {
   let stripe_response = await john.getStripeData(req.user.user);
   console.log(img_response)
   if (img_response.status == 200 && img_response.image_data) {
-      response.user_info['image_url'] = img_response.image_data.file_path ? img_response.image_data.file_path : null;
+    response.user_info['image_url'] = img_response.image_data.file_path ? img_response.image_data.file_path : null;
   }
   console.log(stripe_response)
   if (stripe_response.status == 200 && stripe_response.stripe_info) {
@@ -339,7 +356,7 @@ app.get('/signIn', async (req, res) => {
   if (response.status == 200) {
     let img_response = await john.getImage(req.query.email);
     if (img_response.status == 200 && img_response.image_data) {
-        response.user_info['image_url'] = img_response.image_data.file_path;
+      response.user_info['image_url'] = img_response.image_data.file_path;
     }
     let stripe_response = await john.getStripeData(req.query.email);
     if (stripe_response.status == 200 && stripe_response.stripe_info) {
@@ -349,9 +366,10 @@ app.get('/signIn', async (req, res) => {
     }
 
   }
-  
+
   res.status(response.status).end(JSON.stringify(response));
 });
+
 
 
 
@@ -419,13 +437,28 @@ app.get('/signUp', async (req, res) => {
   try {
     console.log(req.query)
     const customer = await stripe.customers.create
-    ({
-      email
-        : req.query.email,
-      name
-        : req.query.name,
-      shipping
-        : {
+      ({
+        email
+          : req.query.email,
+        name
+          : req.query.name,
+        shipping
+          : {
+          address
+            : {
+            city
+              : req.query.city,
+            country
+              : req.query.country,
+            line1
+              : req.query.street,
+            postal_code
+              : req.query.postal_code,
+            state
+              : req.query.state,
+          },
+          name: req.query.name,
+        },
         address
           : {
           city
@@ -439,31 +472,16 @@ app.get('/signUp', async (req, res) => {
           state
             : req.query.state,
         },
-        name: req.query.name,
-      },
-      address
-        : {
-        city
-          : req.query.city,
-        country
-          : req.query.country,
-        line1
-          : req.query.street,
-        postal_code
-          : req.query.postal_code,
-        state
-          : req.query.state,
-      },
-    });
-  
+      });
+
     var john = new LoginOrSignUp();
     console.log(customer)
     let response_stripe = await john.saveStripeUser(req.query.email, customer.id);
     response = await john.saveUser(
-    req.query.email, req.query.password, req.query.is_subscribed,
-    req.query.country, req.query.name, req.query.city,
-    req.query.street, req.query.postal_code, req.query.state);
-  
+      req.query.email, req.query.password, req.query.is_subscribed,
+      req.query.country, req.query.name, req.query.city,
+      req.query.street, req.query.postal_code, req.query.state);
+
     if (response_stripe.status != 200) {
       return res.status(response.status).send(response);
     }
