@@ -233,7 +233,7 @@ method.getUser = async function (_email, _password) {
       contact_no: user_data.contact_no ? user_data.contact_no : null,
       country: user_data.country ? user_data.country : null,
       date_of_birth: user_data.date_of_birth ? user_data.date_of_birth : null,
-      creation_date: creation_date,
+      creation_date: creation_date.toLocaleString(),
     }
     console.log(user_info)
   } catch (e) {
@@ -298,7 +298,7 @@ method.getUserProfile = async function (_email,) {
       street: user_data.street ? user_data.street : null,
       postal_code: user_data.postal_code ? user_data.postal_code : null,
       state: user_data.state ? user_data.state : null,
-      creation_date: creation_date,
+      creation_date: creation_date.toLocaleString(),
     }
   }
   return response;
