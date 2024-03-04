@@ -238,11 +238,12 @@ app.post('/cancel-subscription', auth, async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js");
   var john = new LoginOrSignUp();
   let stripe_response = await john.getStripeData(req.user.user);
-  const deletedSubscription = await stripe.subscriptions.del(
+  
+  const deletedSubscription = await stripe.subscriptions.cancel(
     stripe_response.stripe_info.subscription_id
   );
 
-  response = await john.updateStripeSubscribtionIdAndStatus(dataObject.customer, "un-subscribe");
+  response = await john.updateStripeSubscribtionIdAndStatus(stripe_response.stripe_info.customer_id, "un-subscribe");
   if (response != 200) {
     return res.status(response.status).send(response);
   }
