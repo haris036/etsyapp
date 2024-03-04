@@ -217,13 +217,14 @@ method.getUser = async function (_email, _password) {
     if (user_data.password == _password) {
       response = tokenGenerator.getToken(_email);
     }
-    var creation_date_string = null;
+    var creation_date = null;
     if (user_data.creation_time) {
       // var utcSeconds = user_data.creation_time;
-      let creation_date = new Date(user_data.creation_time); // The 0 there is the key, which sets the date to the epoch
+      creation_date = new Date(user_data.creation_time); // The 0 there is the key, which sets the date to the epoch
       // console.log(utcSeconds)
       // creation_date.setUTCSeconds(utcSeconds);
-      creation_date_string = creation_date.getFullYear() + "-" + (formatData(creation_date.getMonth() + 1)) + "-" + formatData(creation_date.getDate());
+      console.log(creation_date.toISOString())
+      // creation_date_string = creation_date.getFullYear() + "-" + (formatData(creation_date.getMonth() + 1)) + "-" + formatData(creation_date.getDate());
     }
     // console.log(creation_date_string)
     user_info = {
@@ -236,7 +237,7 @@ method.getUser = async function (_email, _password) {
       contact_no: user_data.contact_no ? user_data.contact_no : null,
       country: user_data.country ? user_data.country : null,
       date_of_birth: user_data.date_of_birth ? user_data.date_of_birth : null,
-      creation_date: creation_date_string,
+      creation_date: creation_date.toISOString(),
     }
     console.log(user_info)
   } catch (e) {
@@ -281,12 +282,12 @@ method.getUserProfile = async function (_email,) {
     await client.close();
 
   }
-  var creation_date_string = null;
+  var creation_date = null;
   if (user_data.creation_time) {
     // var utcSeconds = user_data.creation_time;
-    let creation_date = new Date(user_data.creation_time); // The 0 there is the key, which sets the date to the epoch
+    creation_date = new Date(user_data.creation_time); // The 0 there is the key, which sets the date to the epoch
     // creation_date.setUTCSeconds(utcSeconds);
-    creation_date_string = creation_date.getFullYear() + "-" + (formatData(creation_date.getMonth() + 1)) + "-" + formatData(creation_date.getDate());
+    // creation_date_string = creation_date.getFullYear() + "-" + (formatData(creation_date.getMonth() + 1)) + "-" + formatData(creation_date.getDate());
   }
   
   let response = {
@@ -303,7 +304,7 @@ method.getUserProfile = async function (_email,) {
       street: user_data.street ? user_data.street : null,
       postal_code: user_data.postal_code ? user_data.postal_code : null,
       state: user_data.state ? user_data.state : null,
-      creation_date: creation_date_string,
+      creation_date: creation_date.toISOString(),
     }
   }
   return response;
