@@ -195,7 +195,7 @@ app.post('/create-subscription', auth, async (req, res) => {
             price
               : priceId,
           }],
-        trial_period_days: 7,
+        trial_period_days: 1,
         payment_behavior
           : 'default_incomplete',
         payment_settings
