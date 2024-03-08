@@ -195,7 +195,7 @@ app.post('/create-subscription', auth, async (req, res) => {
             price
               : priceId,
           }],
-        trial_period_days: 1,
+        trial_end: Date.now() + 1000,
         payment_behavior
           : 'default_incomplete',
         payment_settings
@@ -209,7 +209,7 @@ app.post('/create-subscription', auth, async (req, res) => {
           end_behavior
             : {
             missing_payment_method
-              : 'cancel',
+              : 'create_invoice',
           },
         },
         expand
