@@ -195,7 +195,7 @@ app.post('/create-subscription', auth, async (req, res) => {
             price
               : priceId,
           }],
-        trial_end: Date.now() + 1000,
+        // trial_end: Date.now() + 1000,
         payment_behavior
           : 'default_incomplete',
         payment_settings
@@ -204,14 +204,14 @@ app.post('/create-subscription', auth, async (req, res) => {
             : 'on_subscription'
         },
 
-        trial_settings
-          : {
-          end_behavior
-            : {
-            missing_payment_method
-              : 'create_invoice',
-          },
-        },
+        // trial_settings
+        //   : {
+        //   end_behavior
+        //     : {
+        //     missing_payment_method
+        //       : 'create_invoice',
+        //   },
+        // },
         expand
           : ['latest_invoice.payment_intent'],
       });
