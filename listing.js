@@ -71,6 +71,7 @@ method.getListing = async function (searchKeyWord, email, is_single_listing, api
     let date_of_timelines = "";
     let trend;
     let engagement = 0;
+    
     // let long_tail_alternative_list = [];
     let images_array = [];
     let history_call = !is_single_listing ? (history.getHistoricalMetrices(searchKeyWord).then(response => {
@@ -144,6 +145,7 @@ method.getListing = async function (searchKeyWord, email, is_single_listing, api
       var sum_of_prices = 0.0;
       // var long_tail_alternatives_map = new Map();
       let views_lists = [];
+      let max_price = 0;
       let min_max_shipping_days_lists = [];
       let item_pricing = new Map();
       var current_time = Date.now();
@@ -153,6 +155,8 @@ method.getListing = async function (searchKeyWord, email, is_single_listing, api
       var length = results.results.length;
       let _items = results.results;
       var _count = 0;
+      var pricing_graph_map = new Map();
+      let price_classes = [];
       console.log(length);
 
       for (let _item of _items) {
@@ -319,16 +323,41 @@ method.getListing = async function (searchKeyWord, email, is_single_listing, api
 
         average_price += parseFloat(item.price);
         if (!item_pricing.has(item.price)) {
-          item_pricing.set(item.price, 0);
+          item_pricing.set(item.price, {
+            price: item.price,
+            count: 0
+          });
         }
 
-        let count = item_pricing.get(item.price);
-        item_pricing.set(item.price, ++count);
+        if (item.price > max_price) {
+          max_price = item.price;
+        }
+
+        let item_price = item_pricing.get(item.price);
+        ++item_price.count;
+        item_pricing.set(item.price, item_price);
         items.push(
           item,
         );
         min_max_shipping_days_lists.push(item.min_max_shipping_days);
       }
+      let bargain_price = max_price/3;
+      let midrange_price = bargain_price * 2;
+      let bargain_prices = [];
+      let midrange_prices = [];
+      let premium_prices = [];      
+      for (let p = 0; p < max_price; p+=10) {
+        price_classes.push("$"+(p+10));
+      }
+      for (let item of items) {
+        if (item.price <= bargain_price) {
+          pricing_graph_map.set("bargain price", bargain_prices.push(item.price));
+        } else if (item.price <= midrange_price) {
+          pricing_graph_map.set("midrange price", midrange_prices.push(item.price));
+        } else {
+          pricing_graph_map.set("premium price", premium_prices.push(item.price));
+        }
+      } 
       // let counter = 0;
       let shipping_prices_pie_chart_map = createPricesPieChartMap(shipping_prices_map, shipping_prices_count,);
 
@@ -350,7 +379,24 @@ method.getListing = async function (searchKeyWord, email, is_single_listing, api
       // console.log(mapSort1)
       // const popular_tags_list_map = Object.fromEntries(mapSort1);
       // const popular_tags_list_map = JSON.stringify(obj);
+      let series = [];
+      series.push(
+        {
+          name: "Bargain price",
+          data: pricing_graph_map.get("bargain price"),
+        }, {
+          name: "Midrange price",
+          data: pricing_graph_map.get("midrange price"),
+        },{
+          name: "Premium price",
+          data: pricing_graph_map.get("premium price")
+        }
 
+      )
+      let pricing_graph = {
+        priceRanges: price_classes,
+        series: series,
+      }
       // let popular_tags_list_map = Array.from(mapSort1.entries());
       let shipping_days = Array.from(shipping_days_map.entries());
       let shipping_prices = Array.from(shipping_prices_map.entries());
@@ -368,7 +414,7 @@ method.getListing = async function (searchKeyWord, email, is_single_listing, api
         name: searchKeyWord,
         items: items,
         // popular_tags: popular_tags,
-        item_pricing: Array.from(item_pricing.entries()),
+        item_pricing: Array.from(item_pricing.values()),
         historical_metrices: historical_metrices,
         long_tail_keyword: long_tail_keyword,
         competition: competition,
@@ -389,6 +435,7 @@ method.getListing = async function (searchKeyWord, email, is_single_listing, api
         // long_tail_alternative_list: long_tail_alternative_list,
         images: images_array,
         engagement: engagement,
+        pricing_graph: pricing_graph,
       };
       
       if (!is_single_listing) {
