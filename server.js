@@ -380,7 +380,7 @@ app.post('/changePassword', auth, async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js");
   var john = new LoginOrSignUp();
   if (!validatePassword(req.query.password)){
-    return res.send("Invalid password")
+    return res.send("A minimum 8 characters password contains a combination of uppercase and lowercase letter and number are required")
   }
   let response = await john.updateUserPassword(req.user.user, req.query.password);
   res.status(response.status).end(JSON.stringify(response));
@@ -390,7 +390,7 @@ app.post('/changePasswordByVerifyingOtp', otpAuthToken, async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js");
   var john = new LoginOrSignUp();
   if (!validatePassword(req.query.password)){
-    return res.send("Invalid password")
+    return res.send("A minimum 8 characters password contains a combination of uppercase and lowercase letter and number are required")
   }
   let response = await john.updateUserPassword(req.user.user, req.query.password);
   res.status(response.status).end(JSON.stringify(response));
@@ -443,9 +443,11 @@ app.get('/signUp', async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js");
   var john = new LoginOrSignUp();
   let response;
+  // console.log(req.query.password)
+  // console.log(validatePassword(req.query.password))
   try {
     if (!validatePassword(req.query.password)){
-      return res.send("Invalid password")
+      return res.send("A minimum 8 characters password contains a combination of uppercase and lowercase letter and number are required")
     }
     console.log(req.query)
     const customer = await stripe.customers.create
@@ -622,7 +624,7 @@ function validateCode(otp, user_info_response) {
 
 function validatePassword(password) {
   var passw = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,20}$/;
-  password.match(passw)
+  return password.match(passw)
 }
 
 // app.delete("/logout", auth, (req, res) => {
