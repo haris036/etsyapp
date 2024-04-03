@@ -76,7 +76,7 @@ method.getListing = async function (searchKeyWord, email, is_single_listing, api
     let images_array = [];
     let history_call = !is_single_listing ? (history.getHistoricalMetrices(searchKeyWord).then(response => {
       console.log("Haris")
-      console.log(response)
+      // console.log(response)
       for (let i = 0; i < response.data.trend.length; i++) {
         trend = {
           month: response.data.trend[i].month,
@@ -157,7 +157,7 @@ method.getListing = async function (searchKeyWord, email, is_single_listing, api
       var _count = 0;
       var pricing_graph_map = new Map();
       let price_classes = [];
-      console.log(length);
+      // console.log(length);
 
       for (let _item of _items) {
 
@@ -347,17 +347,26 @@ method.getListing = async function (searchKeyWord, email, is_single_listing, api
       let midrange_prices = [];
       let premium_prices = [];      
       for (let p = 0; p < max_price; p+=10) {
+        // console.log()
         price_classes.push("$"+(p+10));
       }
+      let inserted = new Set();
       for (let item of items) {
-        if (item.price <= bargain_price) {
-          pricing_graph_map.set("bargain price", bargain_prices.push(item.price));
-        } else if (item.price <= midrange_price) {
-          pricing_graph_map.set("midrange price", midrange_prices.push(item.price));
-        } else {
-          pricing_graph_map.set("premium price", premium_prices.push(item.price));
-        }
-      } 
+        if(!inserted.has(item.price)) {
+          if (item.price <= bargain_price ) {
+            inserted.add(item.price);
+            bargain_prices.push(item.price);
+          } else if (item.price <= midrange_price) {
+            inserted.add(item.price);
+            midrange_prices.push(item.price);
+          } else  {
+            inserted.add(item.price);
+            premium_prices.push(item.price);
+          }
+        
+        } 
+      }
+      // console.log(pricing_graph_map);
       // let counter = 0;
       let shipping_prices_pie_chart_map = createPricesPieChartMap(shipping_prices_map, shipping_prices_count,);
 
@@ -383,16 +392,17 @@ method.getListing = async function (searchKeyWord, email, is_single_listing, api
       series.push(
         {
           name: "Bargain price",
-          data: pricing_graph_map.get("bargain price"),
+          data: bargain_prices,
         }, {
           name: "Midrange price",
-          data: pricing_graph_map.get("midrange price"),
+          data: midrange_prices,
         },{
           name: "Premium price",
-          data: pricing_graph_map.get("premium price")
+          data: premium_prices,
         }
 
       )
+      console.log(series)
       let pricing_graph = {
         priceRanges: price_classes,
         series: series,
@@ -403,11 +413,11 @@ method.getListing = async function (searchKeyWord, email, is_single_listing, api
       // let long_tail_alternatives = Array.from(long_tail_alternatives_map.entries());
       // console.log(material_wise_items_map)
       let material_items = toObject(material_wise_items_map);
-      console.log(material_items)
+      // console.log(material_items)
       // let similar_shopper_searches = Array.from(similar_shopper_searches_map.entries());
       let shipping_day_pie_chart_data = Array.from(shipping_day_pie_chart_map.entries());
-      console.log(shipping_day_pie_chart_data)
-      console.log(shipping_prices_pie_chart_map)
+      // console.log(shipping_day_pie_chart_data)
+      // console.log(shipping_prices_pie_chart_map)
       let shipping_prices_pie_chart_data = Array.from(shipping_prices_pie_chart_map.entries());
       let result = {
         status: 200,
@@ -455,7 +465,7 @@ method.getListing = async function (searchKeyWord, email, is_single_listing, api
 
         await history.insertOne(doc);
       }
-      console.log(result.engagement)
+      // console.log(result.engagement)
       let response = {
         status: 200,
         result: result,
@@ -541,7 +551,7 @@ function createPricesPieChartMap(shipping_prices_map, shipping_prices_count,) {
 
 // maximum_price: null,
 function createDayPieChartMap(shipping_days_map, shipping_days_count,) {
-  console.log(shipping_days_map)
+  // console.log(shipping_days_map)
   let shipping_days_pie_chart_map = new Map();
   let _shipping_days_pie_chart_map = new Map();
   for (let [key, value] of shipping_days_map.entries()) {
@@ -587,7 +597,7 @@ async function get_categories() {
   let response = await fetch(url, requestOptions);
   // console.log(response.result)
   let results = await response.json();
-  console.log(results.results)
+  // console.log(results.results)
   for (let result of results.results) {
     category_map.set(result.id, result.name);
     if (result.children && result.children.length != 0)
