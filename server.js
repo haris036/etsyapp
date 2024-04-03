@@ -22,6 +22,34 @@ const api_keys = process.env.API_KEYS.split(',')
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const TagListing = require("./tags_listing.js");
 
+// console.log(process.env.API_KEYS)
+var storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, './images')
+  },
+  filename: (req, file, cb) => {
+    cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname))
+  }
+});
+
+app.use(bodyParser.urlencoded({ extended: false }))
+app.use(bodyParser.json())
+
+var upload = multer({ storage: storage });
+const corsOptions = {
+  origin: '*',
+  optionSuccessStatus: 200,
+}
+
+app.use(cors(corsOptions));
+app.use(express.urlencoded({ extended: true }));
+
+app.use(express.static(__dirname));
+
+app.get('/', async (req, res) => {
+  res.send("<h1>Server is running</h1>")
+});
+
 
 app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
   let event;
@@ -79,33 +107,6 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
   res.sendStatus(200);
 }
 );
-// console.log(process.env.API_KEYS)
-var storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, './images')
-  },
-  filename: (req, file, cb) => {
-    cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname))
-  }
-});
-
-app.use(bodyParser.urlencoded({ extended: false }))
-app.use(bodyParser.json())
-
-var upload = multer({ storage: storage });
-const corsOptions = {
-  origin: '*',
-  optionSuccessStatus: 200,
-}
-
-app.use(cors(corsOptions));
-app.use(express.urlencoded({ extended: true }));
-
-app.use(express.static(__dirname));
-
-app.get('/', async (req, res) => {
-  res.send("<h1>Server is running</h1>")
-});
 
 app.use(
   express.json(
@@ -194,7 +195,7 @@ app.post('/create-subscription', auth, async (req, res) => {
             price
               : priceId,
           }],
-        // trial_end: Date.now() + 1000,
+        trial_end: Math.floor(+new Date() / 1000)+300,
         payment_behavior
           : 'default_incomplete',
         payment_settings
@@ -203,14 +204,14 @@ app.post('/create-subscription', auth, async (req, res) => {
             : 'on_subscription'
         },
 
-        // trial_settings
-        //   : {
-        //   end_behavior
-        //     : {
-        //     missing_payment_method
-        //       : 'create_invoice',
-        //   },
-        // },
+        trial_settings
+          : {
+          end_behavior
+            : {
+            missing_payment_method
+              : 'create_invoice',
+          },
+        },
         expand
           : ['latest_invoice.payment_intent'],
       });
@@ -378,6 +379,9 @@ app.get('/signIn', async (req, res) => {
 app.post('/changePassword', auth, async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js");
   var john = new LoginOrSignUp();
+  if (!validatePassword(req.query.password)){
+    return res.send("Invalid password")
+  }
   let response = await john.updateUserPassword(req.user.user, req.query.password);
   res.status(response.status).end(JSON.stringify(response));
 });
@@ -385,6 +389,9 @@ app.post('/changePassword', auth, async (req, res) => {
 app.post('/changePasswordByVerifyingOtp', otpAuthToken, async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js");
   var john = new LoginOrSignUp();
+  if (!validatePassword(req.query.password)){
+    return res.send("Invalid password")
+  }
   let response = await john.updateUserPassword(req.user.user, req.query.password);
   res.status(response.status).end(JSON.stringify(response));
 });
@@ -437,6 +444,9 @@ app.get('/signUp', async (req, res) => {
   var john = new LoginOrSignUp();
   let response;
   try {
+    if (!validatePassword(req.query.password)){
+      return res.send("Invalid password")
+    }
     console.log(req.query)
     const customer = await stripe.customers.create
       ({
@@ -477,7 +487,8 @@ app.get('/signUp', async (req, res) => {
       });
 
     var john = new LoginOrSignUp();
-    console.log(customer)
+    console.log(customer);
+    
     let response_stripe = await john.saveStripeUser(req.query.email, customer.id);
     response = await john.saveUser(
       req.query.email, req.query.password, req.query.is_subscribed,
@@ -609,6 +620,10 @@ function validateCode(otp, user_info_response) {
   }
 }
 
+function validatePassword(password) {
+  var passw = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,20}$/;
+  password.match(passw)
+}
 
 // app.delete("/logout", auth, (req, res) => {
 //   res.end("log out");
