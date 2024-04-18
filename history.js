@@ -104,8 +104,8 @@ let payload = {
     })
     .catch(error => {
         _response = {
-          status: 500,
-          error_msg: error
+          status: 400,
+          error_msg: error.message,
         };
     });
     return _response;
@@ -145,8 +145,8 @@ method.getHistory = async function (email) {
     return response;
   } catch (e) {
     return response = {
-      status: 500,
-      error_msg: e,
+      status: 400,
+      error_msg: e.message,
     }
   } finally {
     await client.close();
