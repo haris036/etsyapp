@@ -244,8 +244,8 @@ method.getTagListing = async function (searchKeyWord, start_index, option) {
   } catch (e) {
     console.log(e)
     return response = {
-      status: 500,
-      error: e,
+      status: 400,
+      error: e.message,
     };
   }
   console.log(response)
@@ -392,8 +392,8 @@ async function tagListing(searchKeyWord, api_key) {
 
   } catch (e) {
     let _response = {
-      status: 500,
-      error_msg: e,
+      status: 400,
+      error_msg: e.message,
     }
     console.log(_response)
     return _response;
