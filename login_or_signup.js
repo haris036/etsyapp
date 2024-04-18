@@ -49,7 +49,7 @@ method.saveUser = async function (_email, _password, _is_subscribed, _country, _
     console.log(e)
     if (e.code === 11000) {
       let response = {
-        status: 500,
+        status: 400,
         error_msg: "User already exists with same email id",
       }
       console.log(response)
@@ -88,8 +88,8 @@ method.updateUserPassword = async function (_email, _password) {
     await dbo.collection("user_data").updateOne(myquery, newvalues);
   } catch (e) {
     let response = {
-      status: 500,
-      error_msg: e,
+      status: 400,
+      error_msg: e.message,
     }
     return response;
   } finally {
@@ -117,8 +117,8 @@ method.updateSubscription = async function (_email, _is_subscribed) {
     await dbo.collection("user_data").updateOne(myquery, newvalues);
   } catch (e) {
     let response = {
-      status: 500,
-      error_msg: e,
+      status: 400,
+      error_msg: e.message,
     }
     return response;
   } finally {
@@ -144,8 +144,8 @@ method.updateOtpExpiration = async function (_email, _is_expired) {
     await dbo.collection("user_tokens").updateOne(myquery, newvalues);
   } catch (e) {
     let response = {
-      status: 500,
-      error_msg: e,
+      status: 400,
+      error_msg: e.message,
     }
     return response;
   } finally {
@@ -181,8 +181,8 @@ method.getUserToken = async function (_email,) {
     console.log(user_info)
   } catch (e) {
     let response = {
-      status: 500,
-      error_msg: e,
+      status: 400,
+      error_msg: e.message,
     }
     return response;
   } finally {
@@ -243,8 +243,8 @@ method.getUser = async function (_email, _password) {
   } catch (e) {
     console.log(e)
     let response = {
-      status: 500,
-      error_msg: e,
+      status: 400,
+      error_msg: e.message,
     }
     return response;
 
@@ -272,8 +272,8 @@ method.getUserProfile = async function (_email,) {
     user_data = await users.findOne({ email: _email });
   } catch (e) {
     let response = {
-      status: 500,
-      error_msg: e,
+      status: 400,
+      error_msg: e.message,
     }
     return response;
 
@@ -322,8 +322,8 @@ method.getImage = async function (_email,) {
     image_data = await images.findOne({ email: _email });
   } catch (e) {
     let response = {
-      status: 500,
-      error_msg: e,
+      status: 400,
+      error_msg: e.message,
     }
     return response;
 
@@ -357,8 +357,8 @@ method.updateCountry = async function (_email, _country,) {
 
   } catch (e) {
     let response = {
-      status: 500,
-      error_msg: e,
+      status: 400,
+      error_msg: e.message,
     }
     return response;
   } finally {
@@ -392,8 +392,8 @@ method.updateDateOfBirth = async function (_email, _date_of_birth) {
 
   } catch (e) {
     let response = {
-      status: 500,
-      error_msg: e,
+      status: 400,
+      error_msg: e.message,
     }
     return response;
   } finally {
@@ -427,8 +427,8 @@ method.updateContactNo = async function (_email, _contact_no) {
 
   } catch (e) {
     let response = {
-      status: 500,
-      error_msg: e,
+      status: 400,
+      error_msg: e.message,
     }
     return response;
   } finally {
@@ -465,8 +465,8 @@ method.saveImage = async function (_email, _image) {
   } catch (e) {
     console.log(e)
     let response = {
-      status: 500,
-      error_msg: e,
+      status: 400,
+      error_msg: e.message,
     }
     return response;
   } finally {
@@ -523,8 +523,8 @@ method.updateProfile = async function (_email, _name, _date_of_birth, _country, 
   } catch (e) {
     console.log(e)
     let response = {
-      status: 500,
-      error_msg: e,
+      status: 400,
+      error_msg: e.message,
     }
     return response;
   } finally {
@@ -554,8 +554,8 @@ method.deleteAccount = async function (_email,) {
 
   } catch (e) {
     let response = {
-      status: 500,
-      error_msg: e,
+      status: 400,
+      error_msg: e.message,
     }
     return response;
   } finally {
@@ -583,8 +583,8 @@ method.saveStripeUser = async function(email, customer_id) {
   } catch (e) {
     console.log(e)
     let response = {
-      status: 500,
-      error_msg: e,
+      status: 400,
+      error_msg: e.message,
     }
     return response;
   } finally {
@@ -620,8 +620,8 @@ method.updateStripeSubscriptionIdAndStatus = async function( email, subscription
   } catch (e) {
     console.log(e)
     let response = {
-      status: 500,
-      error_msg: e,
+      status: 400,
+      error_msg: e.message,
     }
     return response;
   } finally {
@@ -654,8 +654,8 @@ method.updateStripeSubscriptionStatus = async function(customer_id, status) {
   } catch (e) {
     console.log(e)
     let response = {
-      status: 500,
-      error_msg: e,
+      status: 400,
+      error_msg: e.message,
     }
     return response;
   } finally {
@@ -665,7 +665,7 @@ method.updateStripeSubscriptionStatus = async function(customer_id, status) {
   }
   let response = {
     status: 200,
-    error_msg: "Status updated successfully",
+    msg: "Status updated successfully",
   }
   return response;
 }
@@ -683,8 +683,8 @@ method.getStripeData = async function (_email,) {
     console.log(stripe_data)
   } catch (e) {
     let response = {
-      status: 500,
-      error_msg: e,
+      status: 400,
+      error_msg: e.message,
     }
     console.log(stripe_data)
     return response;
@@ -759,8 +759,8 @@ method.forgotPassword = async function (_email,) {
   } catch (e) {
     console.log(e)
     let response = {
-      status: 500,
-      error_msg: e,
+      status: 400,
+      error_msg: e.message,
     }
     return response;
   } finally {
@@ -790,8 +790,8 @@ method.registerForNewsAndUpdates = async function (email,) {
   } catch (e) {
     console.log(e)
     let response = {
-      status: 500,
-      error_msg: e,
+      status: 400,
+      error_msg: e.message,
     }
     return response;
   } finally {
