@@ -155,7 +155,7 @@ method.getListing = async function (searchKeyWord, email, is_single_listing, api
       var length = results.results.length;
       let _items = results.results;
       var _count = 0;
-      var pricing_graph_map = new Map();
+      // var pricing_graph_map = new Map();
       let price_classes = [];
       // console.log(length);
 
@@ -343,31 +343,38 @@ method.getListing = async function (searchKeyWord, email, is_single_listing, api
       }
       let bargain_price = max_price/3;
       let midrange_price = bargain_price * 2;
-      let bargain_prices = [];
-      let midrange_prices = [];
-      let premium_prices = [];      
-      for (let p = 0; p < max_price; p+=10) {
+      // let innn = 0;
+      let divisor = Math.ceil(max_price/10)
+      for (let p = 0; p < max_price; p+=divisor) {
         // console.log()
-        price_classes.push("$"+(p+10));
+        price_classes.push("$"+p+"-"+(p+divisor));
+        // innn++;
       }
-      let inserted = new Set();
+      let bargain_prices = Array(price_classes.length).fill(0);
+      let midrange_prices = Array(price_classes.length).fill(0);
+      let premium_prices = Array(price_classes.length).fill(0);   
+      console.log(premium_prices)
+      // let inserted = new Set();
       for (let item of items) {
-        if(!inserted.has(item.price)) {
-          if (item.price <= bargain_price ) {
-            inserted.add(item.price);
-            bargain_prices.push(item.price);
-          } else if (item.price <= midrange_price) {
-            inserted.add(item.price);
-            midrange_prices.push(item.price);
-          } else  {
-            inserted.add(item.price);
-            premium_prices.push(item.price);
-          }
-        
-        } 
+        let index = Math.floor(item.price/divisor);
+        if (item.price <= bargain_price ) {
+          // inserted.add(item.price);            
+          bargain_prices[index]++;
+          console.log(index)
+        } else if (item.price <= midrange_price) {
+          // inserted.add(item.price);
+         
+          midrange_prices[index]++;
+        } else  {
+          // inserted.add(item.price);
+          console.log(index)
+          console.log("midra"+ item.price);
+          premium_prices[index]++;
+        }
       }
       // console.log(pricing_graph_map);
       // let counter = 0;
+      console.log(premium_prices)
       let shipping_prices_pie_chart_map = createPricesPieChartMap(shipping_prices_map, shipping_prices_count,);
 
       let shipping_day_pie_chart_map = createDayPieChartMap(shipping_days_map, shipping_days_count,);
@@ -486,7 +493,7 @@ method.getListing = async function (searchKeyWord, email, is_single_listing, api
     console.log(e)
     let _response = {
       status: 500,
-      error_msg: e,
+      error_msg: e.message,
     }
     return _response;
   } finally {
