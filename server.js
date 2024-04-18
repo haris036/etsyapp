@@ -66,7 +66,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
     console.log(
       `⚠️  Check the env file and enter the correct webhook secret.`
     );
-    return res.sendStatus(400);
+    return res.status(400).send({ error: { message: err.message } });
   }
   // Extract the object from the event.
   const dataObject = event.data.object;
@@ -105,8 +105,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
     // Unexpected event type
   }
   res.sendStatus(200);
-}
-);
+});
 
 app.use(
   express.json(
@@ -174,9 +173,10 @@ app.post('/add_stripe_customer', auth, async (req, res) => {
 
     response["customer_id"] = customer.id;
     console.log(response)
+    response.msg = "Stripe customer added";
     return res.status(200).send(response);
   } catch (e) {
-    return res.status(500).send(e);
+    return res.status(400).send({ error: { message: e.message } });
   }
 });
 
@@ -225,6 +225,7 @@ app.post('/create-subscription', auth, async (req, res) => {
       response = {
         subscriptionId: subscription.id,
         clientSecret: subscription.latest_invoice.payment_intent.client_secret,
+        msg: "user subscribed",
       }
     );
   } catch (error) {
@@ -243,8 +244,9 @@ app.post('/cancel-subscription', auth, async (req, res) => {
     stripe_response.stripe_info.subscription_id
   );
 
-  response = await john.updateStripeSubscribtionIdAndStatus(stripe_response.stripe_info.customer_id, "un-subscribe");
+  response = await john.updateStripeSubscriptionStatus(stripe_response.stripe_info.customer_id, "un-subscribe");  
   if (response != 200) {
+    response.msg = "subscription cancelled";
     return res.status(response.status).send(response);
   }
   res.status(200).send(deletedSubscription);
@@ -340,7 +342,6 @@ app.get('/me', auth, async (req, res) => {
     response.user_info['customer_id'] = stripe_response.stripe_info.customer_id;
     response.user_info['subscription_id'] = stripe_response.stripe_info.subscription_id;
     response.user_info['subscription_status'] = stripe_response.stripe_info.status;
-
   }
   res.status(response.status).end(JSON.stringify(response));
 });
@@ -366,6 +367,7 @@ app.get('/signIn', async (req, res) => {
       response.user_info['customer_id'] = stripe_response.stripe_info.customer_id;
       response.user_info['subscription_id'] = stripe_response.stripe_info.subscription_id;
       response.user_info['subscription_status'] = stripe_response.stripe_info.status;
+      response['msg'] =  "Successfully logged in";
     }
 
   }
@@ -500,11 +502,11 @@ app.get('/signUp', async (req, res) => {
     if (response_stripe.status != 200) {
       return res.status(response.status).send(response);
     }
-
     response["customer_id"] = customer.id;
+    response["msg"] = "Successfully logged in";
   } catch (e) {
     console.log(e)
-    return res.status(500).send(e);
+    return res.status(400).send({ error: { message: e.message } });
   }
   console.log(response)
   res.status(response.status).end(JSON.stringify(response));
