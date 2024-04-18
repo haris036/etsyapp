@@ -69,7 +69,7 @@ method.getCalenderHolidays = async function () {
     } catch (e) {
         let response = {
             status: api_response.status,
-            error_msg: e,
+            error_msg: e.message,
         }
         return response;
     }
