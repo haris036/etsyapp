@@ -195,7 +195,7 @@ app.post('/create-subscription', auth, async (req, res) => {
             price
               : priceId,
           }],
-        trial_end: Math.floor(+new Date() / 1000)+300,
+        // trial_end: Math.floor(+new Date() / 1000)+300,
         payment_behavior
           : 'default_incomplete',
         payment_settings
@@ -204,16 +204,15 @@ app.post('/create-subscription', auth, async (req, res) => {
             : 'on_subscription'
         },
 
-        trial_settings
-          : {
-          end_behavior
-            : {
-            missing_payment_method
-              : 'create_invoice',
-          },
-        },
-        expand
-          : ['latest_invoice.payment_intent'],
+        // trial_settings
+        //   : {
+        //   end_behavior
+        //     : {
+        //     missing_payment_method
+        //       : 'create_invoice',
+        //   },
+        // },
+        expand: ['latest_invoice.payment_intent'],
       });
     console.log(subscription)
     var john = new LoginOrSignUp();
@@ -232,6 +231,7 @@ app.post('/create-subscription', auth, async (req, res) => {
     return res.status(400).send({ error: { message: error.message } });
   }
 });
+
 
 
 
