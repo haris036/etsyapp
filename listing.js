@@ -457,7 +457,7 @@ method.getListing = async function (searchKeyWord, email, is_single_listing, api
       
       if (!is_single_listing) {
         await client.connect();
-
+        console.log("Harus" + email.user);
         const database = client.db("etsy_database");
 
         const doc = {
