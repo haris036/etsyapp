@@ -125,15 +125,14 @@ method.getHistory = async function (email) {
     await user_history_data.forEach(doc => {
       // console.log("rrrr")
       if (doc) {
-        user_histories.push(
-            {
-              keyword: doc.keyword,
-              searches: doc.searches,
-              average_price: doc.average_price,
-              competition: doc.competition,
-              search_time: doc.search_time,
-            },
-        )
+        let history = {
+          keyword: doc.keyword,
+          searches: doc.searches,
+          average_price: doc.average_price,
+          competition: doc.competition,
+          search_time: doc.search_time,
+        };
+        user_histories.push(history)
       }
     })
     let response = {
