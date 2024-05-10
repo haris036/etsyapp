@@ -454,13 +454,14 @@ method.getListing = async function (searchKeyWord, email, is_single_listing, api
         engagement: engagement,
         pricing_graph: pricing_graph,
       };
-      
+      console.log(email)
       if (!is_single_listing) {
         await client.connect();
+
         const database = client.db("etsy_database");
 
         const doc = {
-          email: email,
+          email: email.user,
           keyword: searchKeyWord,
           searches: result.searches,
           competition: result.competition,
@@ -482,7 +483,7 @@ method.getListing = async function (searchKeyWord, email, is_single_listing, api
 
     else {
       let _response = {
-        status: 500,
+        status: 400,
         error_msg: `Error in getting results received respose code: ${response.status} response description: ${response.statusText}`,
       }
       return _response;
@@ -491,7 +492,7 @@ method.getListing = async function (searchKeyWord, email, is_single_listing, api
   } catch (e) {
     console.log(e)
     let _response = {
-      status: 500,
+      status: 400,
       error_msg: e.message,
     }
     return _response;
