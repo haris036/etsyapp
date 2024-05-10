@@ -126,15 +126,13 @@ method.getHistory = async function (email) {
       // console.log("rrrr")
       if (doc) {
         user_histories.push(
-          {
-            history: {
+            {
               keyword: doc.keyword,
               searches: doc.searches,
               average_price: doc.average_price,
               competition: doc.competition,
               search_time: doc.search_time,
             },
-          }
         )
       }
     })
