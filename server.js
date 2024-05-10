@@ -448,7 +448,13 @@ app.get('/signUp', async (req, res) => {
   // console.log(validatePassword(req.query.password))
   try {
     if (!validatePassword(req.query.password)){
-      return res.status(400).send("A minimum 8 characters password contains a combination of uppercase and lowercase letter and number are required")
+      response= {
+        status: 400,
+        msg:"A minimum 8 characters password contains a combination of uppercase and lowercase letter and number are required"
+      }
+      return res.status(400).send(
+        response
+      )
     }
     console.log(req.query)
     const customer = await stripe.customers.create
@@ -501,7 +507,26 @@ app.get('/signUp', async (req, res) => {
     if (response_stripe.status != 200) {
       return res.status(response.status).send(response);
     }
-    response["customer_id"] = customer.id;
+    // response.user_info['customer_id'] = stripe_response.stripe_info.customer_id;
+    // response.user_info['subscription_id'] = stripe_response.stripe_info.subscription_id;
+    // response.user_info['subscription_status'] = stripe_response.stripe_info.status;
+    let tokenGenerator = new GenerateToken();
+    let token_info = tokenGenerator.getToken(req.query.email,);
+    let user_info = {
+      access_token: token_info.access_token,
+      email: req.query.email,
+      contact_no: null,
+      country: req.query.country,
+      name: req.query.name,
+      is_subscribed: "N",
+      customer_id: customer.id,
+      date_of_birth: req.query.date_of_birth,
+      creation_date: Date.now(),
+      user_id: response.user,
+      refresh_token: token_info.refresh_token,
+    }
+    // response["customer_id"] = customer.id;
+    response["user_info"] = user_info;
     response["msg"] = "Successfully logged in";
   } catch (e) {
     console.log(e)
