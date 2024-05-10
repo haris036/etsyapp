@@ -47,7 +47,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(__dirname));
 
 app.get('/', async (req, res) => {
-  res.send("<h1>Server is running</h1>")
+  res.status(200).send("<h1>Server is running</h1>")
 });
 
 
@@ -231,7 +231,6 @@ app.post('/create-subscription', auth, async (req, res) => {
     return res.status(400).send({ error: { message: error.message } });
   }
 });
-
 
 
 
@@ -449,7 +448,7 @@ app.get('/signUp', async (req, res) => {
   // console.log(validatePassword(req.query.password))
   try {
     if (!validatePassword(req.query.password)){
-      return res.send("A minimum 8 characters password contains a combination of uppercase and lowercase letter and number are required")
+      return res.status(400).send("A minimum 8 characters password contains a combination of uppercase and lowercase letter and number are required")
     }
     console.log(req.query)
     const customer = await stripe.customers.create
@@ -606,8 +605,8 @@ function validateCode(otp, user_info_response) {
   console.log(user_info_response.otp)
   if (user_info_response.is_expired == "Y") {
     return response = {
-      status: 404,
-      msg: "Otp expired"
+      status: 400,
+      error_msg: "Otp expired"
     }
   }
   if (user_info_response.otp == otp) {
@@ -618,8 +617,8 @@ function validateCode(otp, user_info_response) {
   }
   else {
     return response = {
-      status: 404,
-      msg: "invalid code"
+      status: 400,
+      error_msg: "invalid code"
     }
   }
 }
