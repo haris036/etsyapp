@@ -22,13 +22,6 @@ const api_keys = process.env.API_KEYS.split(',')
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const TagListing = require("./tags_listing.js");
 
-app.use(
-  bodyParser.json({
-      verify: function(req, res, buf) {
-          req.rawBody = buf;
-      }
-  })
-);
 
 app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
   let event;
