@@ -71,6 +71,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
   // Extract the object from the event.
   const dataObject = event.data.object;
   let response;
+  console.log(event.type)
   // Handle the event
   // Review important events for Billing webhooks
   // https://stripe.com/docs/billing/webhooks
