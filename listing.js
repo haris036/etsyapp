@@ -454,7 +454,7 @@ method.getListing = async function (searchKeyWord, email, is_single_listing, api
         engagement: engagement,
         pricing_graph: pricing_graph,
       };
-      console.log(email)
+      
       if (!is_single_listing) {
         await client.connect();
 
@@ -471,6 +471,7 @@ method.getListing = async function (searchKeyWord, email, is_single_listing, api
         const history = database.collection("user_history");
 
         await history.insertOne(doc);
+        console.log("INSERT" + email)
       }
       // console.log(result.engagement)
       let response = {
