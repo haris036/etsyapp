@@ -35,7 +35,7 @@ app.post('/webhook', async (req, res) => {
   var LoginOrSignUp = require("./login_or_signup.js");
   try {
     event = stripe.webhooks.constructEvent(
-      req.body,
+      req.rawbody,
       req.headers['stripe-signature'],
       process.env.STRIPE_WEBHOOK_SECRET
     );
