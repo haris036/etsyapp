@@ -22,12 +22,20 @@ const api_keys = process.env.API_KEYS.split(',')
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const TagListing = require("./tags_listing.js");
 
-app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+app.use(
+  bodyParser.json({
+      verify: function(req, res, buf) {
+          req.rawBody = buf;
+      }
+  })
+);
+
+app.post('/webhook', async (req, res) => {
   let event;
   var LoginOrSignUp = require("./login_or_signup.js");
   try {
     event = stripe.webhooks.constructEvent(
-      req.body,
+      req.rawbody,
       req.headers['stripe-signature'],
       process.env.STRIPE_WEBHOOK_SECRET
     );
@@ -78,6 +86,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
   }
   res.sendStatus(200);
 });
+
 
 
 // console.log(process.env.API_KEYS)
