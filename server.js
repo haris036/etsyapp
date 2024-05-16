@@ -22,35 +22,6 @@ const api_keys = process.env.API_KEYS.split(',')
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const TagListing = require("./tags_listing.js");
 
-// console.log(process.env.API_KEYS)
-var storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, './images')
-  },
-  filename: (req, file, cb) => {
-    cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname))
-  }
-});
-
-app.use(bodyParser.urlencoded({ extended: false }))
-app.use(bodyParser.json())
-
-var upload = multer({ storage: storage });
-const corsOptions = {
-  origin: '*',
-  optionSuccessStatus: 200,
-}
-
-app.use(cors(corsOptions));
-app.use(express.urlencoded({ extended: true }));
-
-app.use(express.static(__dirname));
-
-app.get('/', async (req, res) => {
-  res.status(200).send("<h1>Server is running</h1>")
-});
-
-
 app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
   let event;
   var LoginOrSignUp = require("./login_or_signup.js");
@@ -107,6 +78,37 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
   }
   res.sendStatus(200);
 });
+
+
+// console.log(process.env.API_KEYS)
+var storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, './images')
+  },
+  filename: (req, file, cb) => {
+    cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname))
+  }
+});
+
+app.use(bodyParser.urlencoded({ extended: false }))
+app.use(bodyParser.json())
+
+var upload = multer({ storage: storage });
+const corsOptions = {
+  origin: '*',
+  optionSuccessStatus: 200,
+}
+
+app.use(cors(corsOptions));
+app.use(express.urlencoded({ extended: true }));
+
+app.use(express.static(__dirname));
+
+app.get('/', async (req, res) => {
+  res.status(200).send("<h1>Server is running</h1>")
+});
+
+
 
 app.use(
   express.json(
