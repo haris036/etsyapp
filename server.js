@@ -30,12 +30,12 @@ app.use(
   })
 );
 
-app.post('/webhook', async (req, res) => {
+app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
   let event;
   var LoginOrSignUp = require("./login_or_signup.js");
   try {
     event = stripe.webhooks.constructEvent(
-      req.rawbody,
+      req.body,
       req.headers['stripe-signature'],
       process.env.STRIPE_WEBHOOK_SECRET
     );
