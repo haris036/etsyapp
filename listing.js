@@ -461,7 +461,7 @@ method.getListing = async function (searchKeyWord, email, is_single_listing, api
         const database = client.db("etsy_database");
 
         const doc = {
-          email: email.user,
+          email: email,
           keyword: searchKeyWord,
           searches: result.searches,
           competition: result.competition,
@@ -471,7 +471,7 @@ method.getListing = async function (searchKeyWord, email, is_single_listing, api
         const history = database.collection("user_history");
 
         await history.insertOne(doc);
-        console.log("INSERT" + email)
+        
       }
       // console.log(result.engagement)
       let response = {
