@@ -69,7 +69,7 @@ method.getSingleListing = async function (string) {
     var tags_data = [];
     if (_response.status == 200) {
         let result = await _response.json();
-        let categories_map = !is_single_listing?await get_categories():null;
+        let categories_map = await get_categories();
         var current_time = Date.now();
         current_time = Math.round(current_time / 1000);
         var shipping_infos = [];
