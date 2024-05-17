@@ -14,7 +14,7 @@ let uri = `mongodb+srv://${username}:${password}@${cluster}/?retryWrites=true&w=
 const client = new MongoClient(uri);
 
 
-method.saveUser = async function (_email, _password, _is_subscribed, _country, _name, _city, _street, _postal_code, _state) {
+method.saveUser = async function (_email, _password,  _country, _name, _city, _street, _postal_code, _state) {
   let usr = "";
   let insert_id = "";
   try {
@@ -32,7 +32,6 @@ method.saveUser = async function (_email, _password, _is_subscribed, _country, _
       email: _email,
       country: _country,
       name: _name,
-      is_subscribed: _is_subscribed,
       last_updated: null,
       expiry: Date.now() + 2592000,
       subscribed_date: Date.now(),
@@ -102,34 +101,34 @@ method.updateUserPassword = async function (_email, _password) {
   return response;
 }
 
-method.updateSubscription = async function (_email, _is_subscribed) {
-  try {
-    await client.connect();
-    var dbo = client.db("etsy_database");
-    var myquery = { email: _email };
-    var newvalues = {
-      $set: {
-        is_subscribed: _is_subscribed,
-        last_updated: Date.now(),
-        subscribed_date: Date.now()
-      }
-    };
-    await dbo.collection("user_data").updateOne(myquery, newvalues);
-  } catch (e) {
-    let response = {
-      status: 400,
-      error_msg: e.message,
-    }
-    return response;
-  } finally {
-    await client.close();
-  }
-  let response = {
-    status: 200,
-    msg: "Updated",
-  }
-  return response;
-}
+// method.updateSubscription = async function (_email, _is_subscribed) {
+//   try {
+//     await client.connect();
+//     var dbo = client.db("etsy_database");
+//     var myquery = { email: _email };
+//     var newvalues = {
+//       $set: {
+//         is_subscribed: _is_subscribed,
+//         last_updated: Date.now(),
+//         subscribed_date: Date.now()
+//       }
+//     };
+//     await dbo.collection("user_data").updateOne(myquery, newvalues);
+//   } catch (e) {
+//     let response = {
+//       status: 400,
+//       error_msg: e.message,
+//     }
+//     return response;
+//   } finally {
+//     await client.close();
+//   }
+//   let response = {
+//     status: 200,
+//     msg: "Updated",
+//   }
+//   return response;
+// }
 
 method.updateOtpExpiration = async function (_email, _is_expired) {
   try {
@@ -233,7 +232,7 @@ method.getUser = async function (_email, _password) {
       refresh_token: response.refresh_token,
       name: user_data.name,
       user_id: user_data.user,
-      is_subscribed: user_data.is_subscribed,
+      // is_subscribed: user_data.is_subscribed,
       contact_no: user_data.contact_no ? user_data.contact_no : null,
       country: user_data.country ? user_data.country : null,
       date_of_birth: user_data.date_of_birth ? user_data.date_of_birth : null,
@@ -296,7 +295,7 @@ method.getUserProfile = async function (_email,) {
       user_id: user_data.user,
       email: user_data.email,
       name: user_data.name,
-      is_subscribed: user_data.is_subscribed,
+      // is_subscribed: user_data.is_subscribed,
       contact_no: user_data.contact_no ? user_data.contact_no : null,
       country: user_data.country ? user_data.country : null,
       date_of_birth: user_data.date_of_birth ? user_data.date_of_birth : null,
