@@ -22,6 +22,16 @@ const api_keys = process.env.API_KEYS.split(',')
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const TagListing = require("./tags_listing.js");
 
+// console.log(process.env.API_KEYS)
+var storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, './images')
+  },
+  filename: (req, file, cb) => {
+    cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname))
+  }
+});
+
 
 app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
   let event;
@@ -80,17 +90,6 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
   res.sendStatus(200);
 });
 
-
-
-// console.log(process.env.API_KEYS)
-var storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, './images')
-  },
-  filename: (req, file, cb) => {
-    cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname))
-  }
-});
 
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
@@ -505,7 +504,7 @@ app.get('/signUp', async (req, res) => {
     
     let response_stripe = await john.saveStripeUser(req.query.email, customer.id);
     response = await john.saveUser(
-      req.query.email, req.query.password, req.query.is_subscribed,
+      req.query.email, req.query.password,
       req.query.country, req.query.name, req.query.city,
       req.query.street, req.query.postal_code, req.query.state);
 
@@ -523,7 +522,6 @@ app.get('/signUp', async (req, res) => {
       contact_no: null,
       country: req.query.country,
       name: req.query.name,
-      is_subscribed: "N",
       customer_id: customer.id,
       date_of_birth: req.query.date_of_birth,
       creation_date: Date.now(),
@@ -571,12 +569,12 @@ app.post('/verifyCode', forgotAuthPasswordToken, async (req, res) => {
   res.status(response.status).end(JSON.stringify(response));
 });
 
-app.post('/updateSubsciption', auth, async (req, res) => {
-  var LoginOrSignUp = require("./login_or_signup.js");
-  var john = new LoginOrSignUp();
-  let response = await john.updateSubscription(req.user.user, req.query.is_subscribed);
-  res.status(response.status).end(JSON.stringify(response));
-});
+// app.post('/updateSubsciption', auth, async (req, res) => {
+//   var LoginOrSignUp = require("./login_or_signup.js");
+//   var john = new LoginOrSignUp();
+//   let response = await john.updateSubscription(req.user.user, req.query.is_subscribed);
+//   res.status(response.status).end(JSON.stringify(response));
+// });
 
 app.post('/getSingleListing',
   auth,
