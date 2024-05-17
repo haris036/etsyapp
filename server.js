@@ -22,15 +22,6 @@ const api_keys = process.env.API_KEYS.split(',')
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const TagListing = require("./tags_listing.js");
 
-// console.log(process.env.API_KEYS)
-var storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, './images')
-  },
-  filename: (req, file, cb) => {
-    cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname))
-  }
-});
 
 
 app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
@@ -90,6 +81,16 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
   res.sendStatus(200);
 });
 
+
+// console.log(process.env.API_KEYS)
+var storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, './images')
+  },
+  filename: (req, file, cb) => {
+    cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname))
+  }
+});
 
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
