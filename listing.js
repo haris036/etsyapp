@@ -71,7 +71,9 @@ method.getListing = async function (searchKeyWord, email, is_single_listing, api
     let date_of_timelines = "";
     let trend;
     let engagement = 0;
-    
+    let avg_shipping_days_map = [0,0];
+    let avg_shipping_prices_map = [0,0];
+    let avg_prices_map = [0,0];
     // let long_tail_alternative_list = [];
     let images_array = [];
     let history_call = !is_single_listing ? (history.getHistoricalMetrices(searchKeyWord).then(response => {
@@ -200,6 +202,10 @@ method.getListing = async function (searchKeyWord, email, is_single_listing, api
             let shipping_price_count_map = shipping_prices_map.get(primary_amount);
             shipping_price_count_map += 1;
             shipping_prices_map.set(primary_amount, shipping_price_count_map);
+            if(avg_shipping_prices_map[1] < shipping_price_count_map){
+              avg_shipping_prices_map[0] = primary_amount;
+              avg_shipping_prices_map[1] = shipping_price_count_map;
+            }
             shipping_price_set = true;
           }
           if (shipping_profile_destinations.min_delivery_days != null && shipping_profile_destinations.max_delivery_days != null) {
@@ -232,9 +238,21 @@ method.getListing = async function (searchKeyWord, email, is_single_listing, api
             if (max_shipping_item_day == null || max_shipping_item_day < shipping_profile_destinations.max_delivery_days) {
               max_shipping_item_day = shipping_profile_destinations.max_delivery_days;
             }
+
             max_shipping_day += 1;
             shipping_days_map.set(shipping_profile_destinations.max_delivery_days, max_shipping_day);
             sum_of_days += shipping_profile_destinations.max_delivery_days;
+            
+            if(avg_shipping_days_map[1] < min_shipping_day){
+              console.log(`avg shipping day `)
+              avg_shipping_prices_map[0] = shipping_profile_destinations.min_delivery_days;
+              avg_shipping_prices_map[1] = min_shipping_day;
+            }
+
+            if(avg_shipping_prices_map[1] < max_shipping_day){
+              avg_shipping_prices_map[0] = shipping_profile_destinations.max_delivery_days;
+              avg_shipping_prices_map[1] = max_shipping_day;
+            }
             shipping_day_set = true;
           }
         }
@@ -336,6 +354,11 @@ method.getListing = async function (searchKeyWord, email, is_single_listing, api
         let item_price = item_pricing.get(item.price);
         ++item_price.count;
         item_pricing.set(item.price, item_price);
+
+        if (avg_prices_map[1] < item_price.count){
+          avg_prices_map[0] = item.price;
+          avg_prices_map[1] = item_price.count;
+        }
         items.push(
           item,
         );
@@ -385,8 +408,8 @@ method.getListing = async function (searchKeyWord, email, is_single_listing, api
       // long_tail_alternative_list = [...tag_lists].reverse().filter(longTail);
       // if (!is_single_listing)
       //   await tagCalls(similar_shopper_lists, long_tail_alternative_list, popular_tags_calls, popular_tags_map, long_tail_alternatives_map, similar_shopper_searches_map, mapSort1);
-      shipping_day_prices.average_price = sum_of_prices / shipping_prices_count;
-      shipping_day_prices.average_days = sum_of_days / shipping_days_count;
+      shipping_day_prices.average_price = avg_shipping_prices_map[0];
+      shipping_day_prices.average_days = avg_shipping_days_map[0];
       if (!is_single_listing) {
         await Promise.resolve(history_call);
       }
@@ -426,6 +449,7 @@ method.getListing = async function (searchKeyWord, email, is_single_listing, api
       // console.log(shipping_day_pie_chart_data)
       // console.log(shipping_prices_pie_chart_map)
       let shipping_prices_pie_chart_data = Array.from(shipping_prices_pie_chart_map.entries());
+      
       let result = {
         status: 200,
         name: searchKeyWord,
@@ -443,7 +467,7 @@ method.getListing = async function (searchKeyWord, email, is_single_listing, api
         avg_searches: searches / length,
         searches: searches,
         favourites: favourites,
-        average_price: average_price / length,
+        average_price: avg_prices_map[0],
         // similar_shopper_searches: similar_shopper_searches,
         shipping_day_pie_chart_data: shipping_day_pie_chart_data,
         shipping_prices_pie_chart_data: shipping_prices_pie_chart_data,
@@ -454,7 +478,10 @@ method.getListing = async function (searchKeyWord, email, is_single_listing, api
         engagement: engagement,
         pricing_graph: pricing_graph,
       };
-      
+      console.log(email)
+      console.log(avg_shipping_days_map)
+      console.log(avg_shipping_prices_map)
+      console.log(avg_prices_map)
       if (!is_single_listing) {
         await client.connect();
 
@@ -471,7 +498,6 @@ method.getListing = async function (searchKeyWord, email, is_single_listing, api
         const history = database.collection("user_history");
 
         await history.insertOne(doc);
-        
       }
       // console.log(result.engagement)
       let response = {
