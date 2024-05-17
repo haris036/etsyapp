@@ -38,6 +38,16 @@ method.getSingleListing = async function (string) {
     } else {
         let urlString = new URL(string);
         listing_id = urlString.pathname.split('/')[2];
+        if(isNaN(listing_id)) {
+            listing_id = urlString.pathname.split('/')[3];
+        } else {
+            let response = {
+                status: 400,
+                msg: "Invalid Url",
+            };
+            // console.log(shipping_day_prices);
+            return response;
+        }
     }
     console.log(listing_id)
     var listings = new Listing();
@@ -45,7 +55,7 @@ method.getSingleListing = async function (string) {
         'https://openapi.etsy.com/v3/application/listings/' + listing_id + '?' +
         new URLSearchParams({
             api_key: api_key_info.api_key,
-            includes: 'images,shipping',
+            includes: 'images,shipping,user',
         }).toString()
 
     );
@@ -53,12 +63,13 @@ method.getSingleListing = async function (string) {
 
 
     let _response = await fetch(url, requestOptions);
-    
+        
     // console.log(result);
     var tags_call = [];
     var tags_data = [];
     if (_response.status == 200) {
         let result = await _response.json();
+        let categories_map = !is_single_listing?await get_categories():null;
         var current_time = Date.now();
         current_time = Math.round(current_time / 1000);
         var shipping_infos = [];
@@ -133,7 +144,7 @@ method.getSingleListing = async function (string) {
             num_favorers: result.num_favorers,
             tags: result.tags,
             materials: result.materials,
-            category: result.taxonomy_path,
+            category: categories_map.get(result.taxonomy_id),
             price: result.price,
             views: result.views,
             creation_time: result.original_creation_timestamp,
@@ -143,6 +154,7 @@ method.getSingleListing = async function (string) {
             monthly_views: result.views / ((current_time - result.original_creation_timestamp) / 2592000),
             last_modified: result.last_modified_tsz,
             expires_on: result.ending_tsz,
+            user_profile_image: result.user.image_url_75x75,
         };
 
 
@@ -161,13 +173,52 @@ method.getSingleListing = async function (string) {
 
     } else {
         let response = {
-            status: 500,
+            status: 400,
            error_msg: `Error in getting results received respose code: ${_response.status} response description: ${_response.statusText}`,
         };
         // console.log(shipping_day_prices);
         return response;
     }
 }
+
+async function get_categories() {
+    var myHeaders = new fetch.Headers();
+  
+  
+    myHeaders.append("x-api-key", api_keys[1]);
+    var requestOptions = {
+      method: 'GET',
+      headers: myHeaders,
+      redirect: 'follow'
+    };
+    const url = (
+      'https://openapi.etsy.com/v3/application/seller-taxonomy/nodes'
+  
+    );
+    let category_map = new Map();
+    let response = await fetch(url, requestOptions);
+    // console.log(response.result)
+    let results = await response.json();
+    // console.log(results.results)
+    for (let result of results.results) {
+      category_map.set(result.id, result.name);
+      if (result.children && result.children.length != 0)
+        getChildren(category_map, result)
+  
+    }
+    return category_map;
+  }
+
+  function getChildren(category, result) {
+
+    for (let child of result.children) {
+      category.set(child.id, child.name);
+      if (child.children && child.children.length != 0) {
+        // console.log(result.id)
+        getChildren(category, child)
+      }
+    }
+  }
 
 function sleep(ms) {
     return new Promise((resolve) => {
