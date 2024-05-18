@@ -244,14 +244,14 @@ method.getListing = async function (searchKeyWord, email, is_single_listing, api
             sum_of_days += shipping_profile_destinations.max_delivery_days;
             
             if(avg_shipping_days_map[1] < min_shipping_day){
-              console.log(`avg shipping day `)
-              avg_shipping_prices_map[0] = shipping_profile_destinations.min_delivery_days;
-              avg_shipping_prices_map[1] = min_shipping_day;
+              console.log(`avg shipping day min shipping day`)
+              avg_shipping_days_map[0] = shipping_profile_destinations.min_delivery_days;
+              avg_shipping_days_map[1] = min_shipping_day;
             }
 
-            if(avg_shipping_prices_map[1] < max_shipping_day){
-              avg_shipping_prices_map[0] = shipping_profile_destinations.max_delivery_days;
-              avg_shipping_prices_map[1] = max_shipping_day;
+            if(avg_shipping_days_map[1] < max_shipping_day){
+              avg_shipping_days_map[0] = shipping_profile_destinations.max_delivery_days;
+              avg_shipping_days_map[1] = max_shipping_day;
             }
             shipping_day_set = true;
           }
