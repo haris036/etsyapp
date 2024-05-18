@@ -309,6 +309,60 @@ method.getUserProfile = async function (_email,) {
   return response;
 }
 
+
+method.checkUser = async function (_email,) {
+
+  let user_info;
+  try {
+
+    await client.connect();
+
+    const database = client.db("etsy_database");
+    const users = database.collection("user_data");
+    const user_data = await users.findOne({ email: _email });
+    let response;
+    // var tokenGenerator = new GenerateToken();
+    if (user_data == null) {
+      return response = {
+        status: 404,
+        error_msg: "No user found",
+      }
+    }
+    
+    // console.log(creation_date_string)
+    user_info = {
+      email: user_data.email,
+      // access_token: response.access_token,
+      // refresh_token: response.refresh_token,
+      name: user_data.name,
+      // user_id: user_data.user,
+      // is_subscribed: user_data.is_subscribed,
+      // contact_no: user_data.contact_no ? user_data.contact_no : null,
+      // country: user_data.country ? user_data.country : null,
+      // date_of_birth: user_data.date_of_birth ? user_data.date_of_birth : null,
+      // creation_date: creation_date.toISOString(),
+    }
+    console.log(user_info)
+  } catch (e) {
+    console.log(e)
+    let response = {
+      status: 400,
+      error_msg: e.message,
+    }
+    return response;
+
+  } finally {
+
+    await client.close();
+
+  }
+  let response = {
+    status: 200,
+    user_info: user_info,
+  }
+  return response;
+}
+
 method.getImage = async function (_email,) {
 
   let user_data;
