@@ -33,14 +33,17 @@ method.getSingleListing = async function (string) {
     console.log(api_keys)
     console.log(string)
     let listing_id;
+
     if (!isNaN(string)){
         listing_id = string;
     } else {
         let urlString = new URL(string);
         listing_id = urlString.pathname.split('/')[2];
+        console.log(listing_id)
         if(isNaN(listing_id)) {
             listing_id = urlString.pathname.split('/')[3];
-        } else {
+            console.log(listing_id)
+            if (isNaN(listing_id)) {
             let response = {
                 status: 400,
                 msg: "Invalid Url",
@@ -48,6 +51,7 @@ method.getSingleListing = async function (string) {
             // console.log(shipping_day_prices);
             return response;
         }
+        } 
     }
     console.log(listing_id)
     var listings = new Listing();
