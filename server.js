@@ -81,7 +81,6 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
   res.sendStatus(200);
 });
 
-
 // console.log(process.env.API_KEYS)
 var storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -380,6 +379,30 @@ app.get('/signIn', async (req, res) => {
 });
 
 
+app.get('/checkUserAlreadyExist', async (req, res) => {
+  var LoginOrSignUp = require("./login_or_signup.js");
+  var john = new LoginOrSignUp();
+  let response = await john.checkUser(req.query.email);
+  // if (response.status == 200) {
+  //   let img_response = await john.getImage(req.query.email);
+  //   if (img_response.status == 200 && img_response.image_data) {
+  //     response.user_info['image_url'] = img_response.image_data.file_path;
+  //   }
+  //   let stripe_response = await john.getStripeData(req.query.email);
+  //   if (stripe_response.status == 200 && stripe_response.stripe_info) {
+  //     response.user_info['customer_id'] = stripe_response.stripe_info.customer_id;
+  //     response.user_info['subscription_id'] = stripe_response.stripe_info.subscription_id;
+  //     response.user_info['subscription_status'] = stripe_response.stripe_info.status;
+  //     response['msg'] =  "Successfully logged in";
+  //   }
+
+  // }
+
+  if(response.status == 200){
+    res.status(400).end(JSON.stringify({status: 400, msg: "User already exist"}));  
+  } else if (response.status == 404)
+    res.status(200).end(JSON.stringify({status: 200, msg: "OK"}));
+});
 
 
 app.post('/changePassword', auth, async (req, res) => {
