@@ -398,7 +398,6 @@ app.get('/checkUserAlreadyExist', async (req, res) => {
 
   // }
 
-  
   if(response.status == 200){
     res.status(400).end(JSON.stringify({status: 400, msg: "User already exist"}));  
   } else if (response.status == 404) {
@@ -683,6 +682,7 @@ function validatePassword(password) {
   var passw = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,20}$/;
   return password.match(passw)
 }
+
 
 // app.delete("/logout", auth, (req, res) => {
 //   res.end("log out");
