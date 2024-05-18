@@ -398,10 +398,14 @@ app.get('/checkUserAlreadyExist', async (req, res) => {
 
   // }
 
+  
   if(response.status == 200){
     res.status(400).end(JSON.stringify({status: 400, msg: "User already exist"}));  
-  } else if (response.status == 404)
+  } else if (response.status == 404) {
     res.status(200).end(JSON.stringify({status: 200, msg: "OK"}));
+  } else {
+    res.status(response.status).end(response);
+  }
 });
 
 
