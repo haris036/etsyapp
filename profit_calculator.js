@@ -3,6 +3,14 @@ function ProfitCalculator() { }
 
 method.calculateProfit = function (custPrice, custShippingPrice, custCoupon, laborCost, materialCost, shippingCost, etsyAds,
     renewing, offsideAdsFeePer) {
+
+    
+        custCoupon = !custCoupon ? 0 : custCoupon;
+        custShippingPrice = !custShippingPrice?0:custShippingPrice;
+        etsyAds = !etsyAds?0:etsyAds;
+        offsideAdsFeePer = !offsideAdsFeePer?0:offsideAdsFeePer;
+        renewing= !renewing?0:renewing;
+        
     let cust_price = custPrice + custShippingPrice;
     let discounted_price = custCoupon == 0 ? 0 : (custPrice - (custCoupon * custPrice / 100) + custShippingPrice);
     let total_cost = laborCost + materialCost + shippingCost + etsyAds + renewing;
